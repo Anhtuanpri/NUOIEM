@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>VF3 Dashboard</title>
+  <title>VF3 Dashboard Bright</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Leaflet -->
@@ -25,87 +25,50 @@
     referrerpolicy="no-referrer"
   />
 
-  <style>
-    /* =========================
-       THEME VARIABLES
-       ========================= */
+  <!-- Apps config -->
+  <script src="apps.js"></script>
 
+  <style>
     :root {
       --radius-big: 26px;
       --radius-mid: 18px;
       --radius-small: 12px;
       --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
 
-    body {
-      margin: 0;
-      font-family: var(--font-main);
-      overflow: hidden;
-    }
-
-    /* --- Theme A: replica ảnh --- */
-    body.theme-a {
-      --bg: #020714;
-      --bg-alt: #050c18;
-      --bg-soft: #081527;
-      --card-bg: linear-gradient(145deg, #050c18, #020714);
-      --accent: #1fe5ff;
-      --accent-soft: #1fe5ff33;
-      --accent-2: #4cf7b0;
-      --danger: #ff4b6a;
+      /* theme bright */
+      --bg: radial-gradient(circle at top, #243b6b 0, #050813 55%, #020309 100%);
+      --bg-alt: #101a30;
+      --bg-soft: #142134;
+      --card-bg: linear-gradient(145deg, #172642, #091121);
+      --accent: #36d1ff;
+      --accent-soft: #36d1ff40;
+      --accent-2: #58ffb5;
+      --danger: #ff4f6e;
       --text-main: #f7fbff;
-      --text-sub: #7f8ba4;
+      --text-sub: #a9b6d8;
       --shadow: 0 0 32px #000000dd;
-      --glass: rgba(6, 19, 40, 0.82);
-      --border-soft: #1a263b;
+      --glass: rgba(13, 24, 49, 0.92);
+      --border-soft: #253352;
     }
 
-    /* --- Theme B: luxury neon / glass --- */
-    body.theme-b {
-      --bg: radial-gradient(circle at top left, #141a33 0, #030415 45%, #000 100%);
-      --bg-alt: rgba(8, 24, 60, 0.75);
-      --bg-soft: rgba(6, 18, 48, 0.6);
-      --card-bg: radial-gradient(circle at top, #101633 0, #050716 65%);
-      --accent: #35f3ff;
-      --accent-soft: #35f3ff44;
-      --accent-2: #ff73f5;
-      --danger: #ff4b6a;
-      --text-main: #fdfdff;
-      --text-sub: #8f9bc7;
-      --shadow: 0 0 40px #000000f0, 0 0 40px #2bffff30;
-      --glass: rgba(4, 10, 30, 0.75);
-      --border-soft: #273054;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-main);
     }
-
-    /* --- Theme C: minimal Tesla style --- */
-    body.theme-c {
-      --bg: #05070d;
-      --bg-alt: #0a0d15;
-      --bg-soft: #0c111b;
-      --card-bg: #0b0f19;
-      --accent: #42c8ff;
-      --accent-soft: #42c8ff33;
-      --accent-2: #22e39a;
-      --danger: #ff4b5e;
-      --text-main: #f5f7fd;
-      --text-sub: #9ca6c3;
-      --shadow: 0 0 26px #000000dd;
-      --glass: rgba(11, 15, 25, 0.98);
-      --border-soft: #181e2e;
-    }
-
-    /* =========================
-       LAYOUT + COMMON STYLES
-       ========================= */
 
     body {
       background: var(--bg);
       color: var(--text-main);
+      overflow: hidden;
+      /* luôn để layout ngang, màn nhỏ thì cho kéo ngang */
+      min-width: 1200px;
     }
 
     .root {
       height: 100vh;
-      padding: 14px 20px;
+      padding: 14px 22px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -138,7 +101,7 @@
     .main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1.1fr 2.1fr 1.2fr;
+      grid-template-columns: 1.1fr 2.1fr 1.25fr;
       gap: 12px;
       min-height: 0;
     }
@@ -159,18 +122,13 @@
       content: "";
       position: absolute;
       inset: -40%;
-      background: radial-gradient(circle at 0 0, var(--accent-soft), transparent 55%);
-      opacity: 0.6;
+      background: radial-gradient(circle at 0 0, var(--accent-soft), transparent 60%);
+      opacity: 0.7;
       pointer-events: none;
     }
-    .panel > * {
-      position: relative;
-      z-index: 1;
-    }
+    .panel > * { position: relative; z-index: 1; }
 
-    /* =========================
-       LEFT PANEL (CAR)
-       ========================= */
+    /* ===== LEFT: CAR ===== */
 
     .left-top-stats {
       display: flex;
@@ -183,20 +141,20 @@
     .battery-chip {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
+      gap: 10px;
+      padding: 6px 11px;
       border-radius: 999px;
-      background: linear-gradient(135deg, var(--bg-soft), transparent);
+      background: linear-gradient(135deg, #20345b, #111a30);
+      box-shadow: 0 0 12px #000000aa;
     }
 
     .battery-icon {
-      width: 30px;
+      width: 32px;
       height: 15px;
       border-radius: 4px;
       border: 2px solid var(--accent);
       position: relative;
     }
-
     .battery-icon::after {
       content: "";
       position: absolute;
@@ -204,14 +162,13 @@
       border-radius: 2px;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
     }
-
     .battery-icon::before {
       content: "";
       position: absolute;
       right: -4px;
       top: 50%;
       width: 4px;
-      height: 6px;
+      height: 7px;
       transform: translateY(-50%);
       border-radius: 2px;
       background: var(--accent);
@@ -229,24 +186,21 @@
     }
 
     .pill {
-      padding: 4px 8px;
+      padding: 4px 9px;
       border-radius: 999px;
-      background: var(--bg-alt);
+      background: #131f38;
       color: var(--text-sub);
       border: 1px solid var(--border-soft);
       white-space: nowrap;
     }
-
-    .pill strong {
-      color: var(--accent);
-    }
+    .pill strong { color: var(--accent); }
 
     .car-viewport-wrapper {
       flex: 1;
       margin-top: 10px;
       border-radius: 24px;
-      background: var(--bg-soft);
-      padding: 10px 10px 12px;
+      background: radial-gradient(circle at top, #263861 0, #0a1020 60%);
+      padding: 9px 9px 11px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -270,7 +224,7 @@
       display: inline-flex;
       padding: 2px;
       border-radius: 999px;
-      background: var(--bg-alt);
+      background: #0d172b;
       border: 1px solid var(--border-soft);
       gap: 2px;
     }
@@ -298,10 +252,10 @@
       border-radius: 20px;
       overflow: hidden;
       position: relative;
-      background: radial-gradient(circle at top, #203a61 0, #020615 70%);
+      background: radial-gradient(circle at top, #30456f 0, #050814 70%);
     }
 
-    /* 2D car visualization */
+    /* 2D CAR */
     .car-2d {
       position: relative;
       width: 100%;
@@ -312,45 +266,40 @@
       position: absolute;
       top: 10%;
       bottom: 10%;
-      width: 3px;
+      width: 4px;
       border-radius: 999px;
-      background: linear-gradient(180deg, transparent 0, #18ffc099 20%, #18ffc099 80%, transparent 100%);
+      background: linear-gradient(180deg, transparent 0, #1cffd199 20%, #1cffd199 80%, transparent 100%);
     }
 
-    .car-2d .lane.l-left {
-      left: 10%;
-    }
-
-    .car-2d .lane.l-right {
-      right: 10%;
-    }
+    .car-2d .lane.l-left { left: 12%; }
+    .car-2d .lane.l-right { right: 12%; }
 
     .car-2d .car-body {
       position: absolute;
-      inset: 20% 22%;
-      border-radius: 40px;
-      background: radial-gradient(circle at top, #538bff, #192237);
-      box-shadow: 0 0 28px #0ff8ff66;
+      inset: 20% 23%;
+      border-radius: 42px;
+      background: radial-gradient(circle at top, #76a7ff, #1d2437);
+      box-shadow: 0 0 32px #17f0ff88;
     }
 
     .car-2d .light {
       position: absolute;
-      width: 70%;
-      height: 24%;
-      left: 15%;
+      width: 72%;
+      height: 25%;
+      left: 14%;
       border-radius: 60%;
       filter: blur(12px);
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
     .car-2d .front {
       top: 5%;
-      background: radial-gradient(circle, #21ffe0, transparent 60%);
+      background: radial-gradient(circle, #20ffe8, transparent 60%);
     }
 
     .car-2d .rear {
       bottom: 5%;
-      background: radial-gradient(circle, #ff3b6e, transparent 60%);
+      background: radial-gradient(circle, #ff3d6e, transparent 60%);
     }
 
     /* 3D iframe */
@@ -358,6 +307,7 @@
       width: 100%;
       height: 100%;
       border: none;
+      background: #000;
     }
 
     .left-bottom {
@@ -370,12 +320,12 @@
     }
 
     .speed-block {
-      background: var(--bg-alt);
+      background: #111a30;
       border-radius: var(--radius-mid);
       padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       border: 1px solid var(--border-soft);
     }
 
@@ -391,7 +341,7 @@
     }
 
     .quick-controls {
-      background: var(--bg-alt);
+      background: #111a30;
       border-radius: var(--radius-mid);
       padding: 8px 10px;
       border: 1px solid var(--border-soft);
@@ -410,9 +360,7 @@
       font-size: 11px;
     }
 
-    /* =========================
-       CENTER PANEL (MAP + MEDIA)
-       ========================= */
+    /* ===== CENTER: MAP ===== */
 
     .center-top {
       display: flex;
@@ -449,8 +397,9 @@
       border-radius: 22px;
       overflow: hidden;
       position: relative;
-      box-shadow: 0 0 30px #000000ee;
+      box-shadow: 0 0 28px #000000dd;
       min-height: 0;
+      background: #02050e;
     }
 
     #map {
@@ -458,13 +407,12 @@
       height: 100%;
     }
 
-    /* Map overlay controls (zoom + volume) */
     .map-overlay-vertical {
       position: absolute;
       right: 10px;
       top: 12%;
       bottom: 18%;
-      width: 32px;
+      width: 34px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -473,8 +421,8 @@
     }
 
     .slider-card {
-      width: 32px;
-      height: 45%;
+      width: 34px;
+      height: 46%;
       background: var(--glass);
       border-radius: 999px;
       border: 1px solid var(--border-soft);
@@ -488,9 +436,9 @@
     }
 
     .slider-card input[type="range"] {
-      writing-mode: bt-lr; /* IE/Edge */
       -webkit-appearance: slider-vertical;
-      width: 6px;
+      writing-mode: bt-lr;
+      width: 8px;
       height: 70px;
       background: transparent;
     }
@@ -503,7 +451,7 @@
     .media-bar {
       margin-top: 10px;
       border-radius: var(--radius-mid);
-      background: var(--bg-alt);
+      background: #111a30;
       border: 1px solid var(--border-soft);
       padding: 8px 10px;
       display: flex;
@@ -512,10 +460,10 @@
     }
 
     .media-cover {
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 16px;
-      background: radial-gradient(circle at top, #ff4b8b, #3b0a72);
+      background: radial-gradient(circle at top, #ff5a9a, #4b1f86);
       overflow: hidden;
     }
 
@@ -536,13 +484,13 @@
     .media-progress {
       height: 3px;
       border-radius: 999px;
-      background: #111827;
+      background: #1a2337;
       margin-top: 5px;
       overflow: hidden;
     }
 
     .media-progress-inner {
-      width: 42%;
+      width: 45%;
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
     }
@@ -564,20 +512,18 @@
       justify-content: center;
       background: radial-gradient(circle at top, var(--accent), var(--accent-2));
       color: #020614;
-      box-shadow: 0 0 15px var(--accent-soft);
+      box-shadow: 0 0 16px var(--accent-soft);
     }
 
     .circle-btn.small {
       width: 26px;
       height: 26px;
-      background: var(--bg-soft);
+      background: #161f37;
       color: var(--text-sub);
       box-shadow: none;
     }
 
-    /* =========================
-       RIGHT PANEL (CLIMATE)
-       ========================= */
+    /* ===== RIGHT: CLIMATE ===== */
 
     .climate-tabs {
       display: flex;
@@ -591,7 +537,7 @@
       border-radius: 999px;
       padding: 6px 0;
       border: 1px solid var(--border-soft);
-      background: var(--bg-alt);
+      background: #111a30;
       color: var(--text-sub);
       cursor: pointer;
     }
@@ -625,7 +571,7 @@
       width: 28px;
       height: 28px;
       border: 1px solid var(--border-soft);
-      background: var(--bg-alt);
+      background: #111a30;
       color: var(--accent);
       cursor: pointer;
     }
@@ -638,12 +584,12 @@
     .fan-dial {
       height: 150px;
       border-radius: 999px;
-      background: radial-gradient(circle at top, #173255, #050a15);
+      background: radial-gradient(circle at top, #284167 0, #090f1d 70%);
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 0 0 22px #000000dd;
+      box-shadow: 0 0 20px #000000dd;
     }
 
     .fan-dial::before {
@@ -695,14 +641,12 @@
       color: var(--accent);
     }
 
-    /* =========================
-       BOTTOM NAV
-       ========================= */
+    /* ===== BOTTOM NAV (APPS) ===== */
 
     .bottom-nav {
-      margin-top: 4px;
+      margin-top: 6px;
       border-radius: 999px;
-      padding: 6px 16px;
+      padding: 7px 16px;
       background: var(--glass);
       border: 1px solid var(--border-soft);
       display: flex;
@@ -724,8 +668,9 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      opacity: 0.7;
+      opacity: 0.75;
       cursor: pointer;
+      min-width: 40px;
     }
 
     .bottom-icon.active {
@@ -734,28 +679,16 @@
     }
 
     .bottom-icon i {
-      font-size: 14px;
+      font-size: 15px;
     }
 
     .bottom-center {
       color: var(--text-main);
       font-size: 13px;
     }
-
-    @media (max-width: 1100px) {
-      .main {
-        grid-template-columns: 1fr;
-        grid-auto-rows: 320px;
-      }
-      .panel {
-        min-height: 0;
-      }
-    }
   </style>
 </head>
-
-<!-- ĐỔI theme-a / theme-b / theme-c ở đây -->
-<body class="theme-a">
+<body>
 <div class="root">
   <!-- TOP BAR -->
   <div class="top-bar">
@@ -834,7 +767,7 @@
       </div>
     </div>
 
-    <!-- CENTER: MAP + MEDIA -->
+    <!-- CENTER: MAP -->
     <div class="panel">
       <div class="center-top">
         <div class="search-box">
@@ -924,44 +857,18 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAV -->
+  <!-- BOTTOM NAV: apps từ apps.js -->
   <div class="bottom-nav">
-    <div class="bottom-nav-left">
-      <div class="bottom-icon active">
-        <i class="fa-solid fa-car-side"></i>
-        <span>Drive</span>
-      </div>
-      <div class="bottom-icon">
-        <i class="fa-solid fa-music"></i>
-        <span>Media</span>
-      </div>
-      <div class="bottom-icon">
-        <i class="fa-solid fa-route"></i>
-        <span>Route</span>
-      </div>
-    </div>
+    <div class="bottom-nav-left" id="nav-left"></div>
     <div class="bottom-center">
       2.0° · Navigation active
     </div>
-    <div class="bottom-nav-right">
-      <div class="bottom-icon">
-        <i class="fa-solid fa-seat-airline"></i>
-        <span>Seats</span>
-      </div>
-      <div class="bottom-icon">
-        <i class="fa-solid fa-fan"></i>
-        <span>Climate</span>
-      </div>
-      <div class="bottom-icon">
-        <i class="fa-solid fa-volume-high"></i>
-        <span>Vol</span>
-      </div>
-    </div>
+    <div class="bottom-nav-right" id="nav-right"></div>
   </div>
 </div>
 
 <script>
-  // ===== MAP INIT =====
+  // ===== MAP =====
   const map = L.map("map", { zoomControl: false }).setView([21.0278, 105.8342], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -977,34 +884,32 @@
   ];
 
   const route = L.polyline(routeCoords, {
-    color: "#19d4ff",
+    color: "#36d1ff",
     weight: 5,
     opacity: 0.95
   }).addTo(map);
 
   const carMarker = L.circleMarker(routeCoords[0], {
     radius: 7,
-    color: "#19d4ff",
-    fillColor: "#19d4ff",
+    color: "#36d1ff",
+    fillColor: "#36d1ff",
     fillOpacity: 1
   }).addTo(map);
 
   map.fitBounds(route.getBounds(), { padding: [30, 30] });
 
-  // car animation
   let idx = 0;
   setInterval(() => {
     idx = (idx + 1) % routeCoords.length;
     carMarker.setLatLng(routeCoords[idx]);
   }, 1500);
 
-  // zoom slider control
   const zoomSlider = document.getElementById("zoomSlider");
   zoomSlider.addEventListener("input", () => {
     map.setZoom(parseInt(zoomSlider.value, 10));
   });
 
-  // ===== TOGGLE 2D / 3D CAR =====
+  // ===== 2D / 3D CAR TOGGLE =====
   const btn2d = document.getElementById("btn-2d");
   const btn3d = document.getElementById("btn-3d");
   const car2d = document.getElementById("car2d");
@@ -1023,6 +928,30 @@
     car2d.style.display = "none";
     car3d.style.display = "block";
   });
+
+  // ===== BOTTOM APPS (từ apps.js) =====
+  const navLeft = document.getElementById("nav-left");
+  const navRight = document.getElementById("nav-right");
+
+  function createAppIcon(app, active) {
+    const div = document.createElement("div");
+    div.className = "bottom-icon" + (active ? " active" : "");
+    div.innerHTML = `<i class="${app.icon}"></i><span>${app.label}</span>`;
+    return div;
+  }
+
+  (function renderApps() {
+    const apps = (window.CAR_APPS || []);
+    const leftApps = apps.filter(a => a.position === "left");
+    const rightApps = apps.filter(a => a.position === "right");
+
+    leftApps.forEach((app, index) => {
+      navLeft.appendChild(createAppIcon(app, index === 0));
+    });
+    rightApps.forEach(app => {
+      navRight.appendChild(createAppIcon(app, false));
+    });
+  })();
 </script>
 </body>
 </html>
