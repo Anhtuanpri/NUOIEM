@@ -9,12 +9,10 @@
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
 
@@ -62,8 +60,7 @@
       background: var(--bg);
       color: var(--text-main);
       overflow: hidden;
-      /* luôn để layout ngang, màn nhỏ thì cho kéo ngang */
-      min-width: 1200px;
+      min-width: 1200px; /* luôn ngang */
     }
 
     .root {
@@ -80,6 +77,7 @@
       align-items: center;
       font-size: 13px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .top-bar-left span:first-child {
@@ -99,11 +97,12 @@
     }
 
     .main {
-      flex: 1;
+      flex: 1 1 auto;
       display: grid;
       grid-template-columns: 1.1fr 2.1fr 1.25fr;
       gap: 12px;
       min-height: 0;
+      align-items: stretch;  /* kéo cao đều */
     }
 
     .panel {
@@ -116,6 +115,7 @@
       display: flex;
       flex-direction: column;
       min-height: 0;
+      height: 100%;          /* *** quan trọng: full chiều cao cột */
     }
 
     .panel::before {
@@ -136,6 +136,7 @@
       align-items: center;
       gap: 10px;
       font-size: 13px;
+      flex: 0 0 auto;
     }
 
     .battery-chip {
@@ -196,7 +197,7 @@
     .pill strong { color: var(--accent); }
 
     .car-viewport-wrapper {
-      flex: 1;
+      flex: 1 1 auto;
       margin-top: 10px;
       border-radius: 24px;
       background: radial-gradient(circle at top, #263861 0, #0a1020 60%);
@@ -212,6 +213,7 @@
       align-items: center;
       font-size: 12px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .car-viewport-header span.title {
@@ -247,7 +249,7 @@
     }
 
     .car-viewport {
-      flex: 1;
+      flex: 1 1 auto;
       margin-top: 6px;
       border-radius: 20px;
       overflow: hidden;
@@ -255,51 +257,71 @@
       background: radial-gradient(circle at top, #30456f 0, #050814 70%);
     }
 
-    /* 2D CAR */
+    /* 2D CAR – bản giống panel trái ảnh mẫu, khối đứng */
     .car-2d {
       position: relative;
       width: 100%;
       height: 100%;
     }
 
+    /* sensor 2 bên */
+    .car-2d .sensor {
+      position: absolute;
+      top: 18%;
+      bottom: 18%;
+      width: 7%;
+      border-radius: 999px;
+      background: linear-gradient(
+        180deg,
+        transparent 0,
+        #20ffd299 20%,
+        #20ffd299 80%,
+        transparent 100%
+      );
+    }
+    .car-2d .sensor.s-left { left: 7%; }
+    .car-2d .sensor.s-right { right: 7%; }
+
+    /* lane mỏng hơn, sát mép sensor */
     .car-2d .lane {
       position: absolute;
-      top: 10%;
-      bottom: 10%;
-      width: 4px;
+      top: 12%;
+      bottom: 12%;
+      width: 2px;
       border-radius: 999px;
-      background: linear-gradient(180deg, transparent 0, #1cffd199 20%, #1cffd199 80%, transparent 100%);
+      background: linear-gradient(180deg, transparent 0, #7bfffa99 20%, #7bfffa99 80%, transparent 100%);
     }
-
-    .car-2d .lane.l-left { left: 12%; }
-    .car-2d .lane.l-right { right: 12%; }
+    .car-2d .lane.l-left { left: 14%; }
+    .car-2d .lane.l-right { right: 14%; }
 
     .car-2d .car-body {
       position: absolute;
-      inset: 20% 23%;
+      inset: 18% 25%;
       border-radius: 42px;
-      background: radial-gradient(circle at top, #76a7ff, #1d2437);
-      box-shadow: 0 0 32px #17f0ff88;
+      background: radial-gradient(circle at top, #8eb8ff, #1e2438);
+      box-shadow:
+        0 0 32px #17f0ff88,
+        0 18px 40px #000000aa;
     }
 
     .car-2d .light {
       position: absolute;
-      width: 72%;
-      height: 25%;
-      left: 14%;
+      width: 76%;
+      height: 24%;
+      left: 12%;
       border-radius: 60%;
       filter: blur(12px);
       opacity: 0.9;
     }
 
     .car-2d .front {
-      top: 5%;
-      background: radial-gradient(circle, #20ffe8, transparent 60%);
+      top: 4%;
+      background: radial-gradient(circle, #22ffe7, transparent 60%);
     }
 
     .car-2d .rear {
-      bottom: 5%;
-      background: radial-gradient(circle, #ff3d6e, transparent 60%);
+      bottom: 4%;
+      background: radial-gradient(circle, #ff3368, transparent 60%);
     }
 
     /* 3D iframe */
@@ -317,16 +339,18 @@
       gap: 8px;
       font-size: 11px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .speed-block {
       background: #111a30;
       border-radius: var(--radius-mid);
-      padding: 8px 10px;
+      padding: 10px 11px;
       display: flex;
       flex-direction: column;
       gap: 6px;
       border: 1px solid var(--border-soft);
+      height: 100%;
     }
 
     .speed-number {
@@ -343,11 +367,12 @@
     .quick-controls {
       background: #111a30;
       border-radius: var(--radius-mid);
-      padding: 8px 10px;
+      padding: 10px 11px;
       border: 1px solid var(--border-soft);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      height: 100%;
     }
 
     .quick-controls .title {
@@ -369,6 +394,7 @@
       gap: 10px;
       font-size: 12px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .search-box {
@@ -392,7 +418,7 @@
     }
 
     .map-wrapper {
-      flex: 1;
+      flex: 1 1 auto;
       margin-top: 8px;
       border-radius: 22px;
       overflow: hidden;
@@ -457,6 +483,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex: 0 0 auto;
     }
 
     .media-cover {
@@ -530,6 +557,7 @@
       gap: 8px;
       font-size: 12px;
       margin-bottom: 4px;
+      flex: 0 0 auto;
     }
 
     .climate-tabs button {
@@ -550,7 +578,7 @@
     }
 
     .climate-main {
-      flex: 1;
+      flex: 1 1 auto;
       display: grid;
       grid-template-columns: auto 1fr auto;
       gap: 10px;
@@ -617,6 +645,7 @@
       margin-top: 10px;
       font-size: 12px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .climate-item {
@@ -654,6 +683,7 @@
       align-items: center;
       font-size: 12px;
       color: var(--text-sub);
+      flex: 0 0 auto;
     }
 
     .bottom-nav-left,
@@ -731,6 +761,8 @@
         </div>
         <div class="car-viewport">
           <div id="car2d" class="car-2d">
+            <div class="sensor s-left"></div>
+            <div class="sensor s-right"></div>
             <div class="lane l-left"></div>
             <div class="lane l-right"></div>
             <div class="light front"></div>
@@ -753,7 +785,7 @@
 
       <div class="left-bottom">
         <div class="speed-block">
-          <div class="speed-label">Current speed</div>
+          <div class="speed-label">CURRENT SPEED</div>
           <div class="speed-number">30</div>
           <div style="font-size:11px;color:var(--text-sub)">km/h · City mode</div>
         </div>
