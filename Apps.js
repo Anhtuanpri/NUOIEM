@@ -1,6 +1,6 @@
-// Danh sách app ở thanh dưới
-// position: "left" = nhóm trái, "right" = nhóm phải
-
+// apps.js
+// Edit this list to control bottom navigation apps.
+// position: "left" = left group, "right" = right group
 window.CAR_APPS = [
   { id: "drive",   label: "Drive",   icon: "fa-solid fa-car-side",    position: "left" },
   { id: "media",   label: "Media",   icon: "fa-solid fa-music",       position: "left" },
@@ -11,5 +11,4 @@ window.CAR_APPS = [
   { id: "volume",  label: "Vol",     icon: "fa-solid fa-volume-high",  position: "right" }
 ];
 
-// Muốn thêm app mới? Chỉ cần push thêm object:
-// { id: "camera", label: "Camera", icon: "fa-solid fa-camera", position: "right" }
+// Example: to add Camera on right: push {id:"cam", label:"Cam", icon:"fa-solid fa-camera", position:"right"}
