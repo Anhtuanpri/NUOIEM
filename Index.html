@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>VF3 Dashboard - Full (Cover Scale)</title>
+  <title>VF3 Dashboard - Fixed</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- Leaflet -->
@@ -12,7 +12,7 @@
   <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer"/>
 
-  <!-- Apps config (edit apps.js to change bottom apps) -->
+  <!-- Apps config -->
   <script src="apps.js" defer></script>
 
   <style>
@@ -32,19 +32,17 @@
 
     .root{width:1440px; height:810px; box-sizing:border-box; padding:14px 22px; display:flex; flex-direction:column; gap:10px; transform-origin: top left;}
 
-    /* top bar */
     .top-bar{display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-sub);}
     .top-bar-left span:first-child{color:var(--text-main); font-weight:600; margin-right:8px;}
     .top-bar-right{display:flex; gap:14px; align-items:center;}
 
-    /* main grid 3 columns */
     .main{flex:1 1 auto; display:grid; grid-template-columns:1.08fr 2.06fr 1.06fr; gap:12px; min-height:0; align-items:stretch;}
 
     .panel{background:var(--card-bg); border-radius:var(--radius-big); box-shadow:var(--shadow); padding:14px 16px; position:relative; overflow:hidden; display:flex; flex-direction:column; min-height:0; height:100%;}
     .panel::before{ content:""; position:absolute; inset:-40%; background:radial-gradient(circle at 0 0,var(--accent-soft),transparent 60%); opacity:0.7; pointer-events:none;}
     .panel>*{position:relative; z-index:1;}
 
-    /* LEFT (CAR) */
+    /* LEFT */
     .left-top-stats{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; flex:0 0 auto;}
     .battery-chip{display:flex; align-items:center; gap:10px; padding:6px 11px; border-radius:999px; background:linear-gradient(135deg,#20345b,#111a30);}
     .battery-icon{width:32px; height:15px; border-radius:4px; border:2px solid var(--accent); position:relative;}
@@ -74,7 +72,7 @@
     .speed-number{font-size:28px; font-weight:700;}
     .quick-controls{background:#111a30; border-radius:var(--radius-mid); padding:10px; border:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center;}
 
-    /* CENTER (MAP + MEDIA) */
+    /* CENTER */
     .center-top{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--text-sub); flex:0 0 auto;}
     .search-box{flex:1; border-radius:999px; background:var(--glass); border:1px solid var(--border-soft); padding:7px 12px; display:flex; align-items:center; gap:8px;}
     .search-box input{flex:1; background:transparent; border:none; outline:none; color:var(--text-main); font-size:12px;}
@@ -92,7 +90,7 @@
     .circle-btn{width:34px; height:34px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(circle at top,var(--accent),var(--accent-2)); color:#020614; box-shadow:0 0 16px var(--accent-soft);}
     .circle-btn.small{width:26px; height:26px; background:#161f37; color:var(--text-sub); box-shadow:none;}
 
-    /* RIGHT (CLIMATE) */
+    /* RIGHT */
     .climate-tabs{display:flex; gap:8px; font-size:12px; margin-bottom:4px; flex:0 0 auto;}
     .climate-tabs button{flex:1; border-radius:999px; padding:6px 0; border:1px solid var(--border-soft); background:#111a30; color:var(--text-sub); cursor:pointer;}
     .climate-tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#020713; font-weight:600;}
@@ -107,7 +105,6 @@
     .pill-btn{border-radius:999px; padding:4px 10px; border:1px solid var(--border-soft); background:transparent; color:var(--text-sub); font-size:11px; cursor:pointer;}
     .pill-btn.primary{border-color:var(--accent); color:var(--accent);}
 
-    /* bottom nav */
     .bottom-nav{margin-top:6px; border-radius:999px; padding:7px 16px; background:var(--glass); border:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-sub); flex:0 0 auto;}
     .bottom-nav-left,.bottom-nav-right{display:flex; align-items:center; gap:18px;}
     .bottom-icon{display:flex; flex-direction:column; align-items:center; gap:2px; opacity:0.75; cursor:pointer; min-width:40px;}
@@ -115,22 +112,18 @@
     .bottom-icon i{font-size:15px;}
     .bottom-center{color:var(--text-main); font-size:13px;}
 
-    /* helper */
     * { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
   </style>
 </head>
 <body>
   <div id="frame">
     <div class="root" id="dashboardRoot">
-      <!-- TOP -->
       <div class="top-bar">
         <div class="top-bar-left"><span>Saturn OS</span><span>Saturn 1 · Oct 2</span></div>
         <div class="top-bar-right"><span id="timeText">10:30 PM</span><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-three-quarters"></i></div>
       </div>
 
-      <!-- MAIN 3 COLUMNS -->
       <div class="main">
-        <!-- LEFT: CAR -->
         <div class="panel">
           <div class="left-top-stats">
             <div class="battery-chip"><div class="battery-icon"></div><div><div style="font-size:11px;color:var(--text-sub)">Battery</div><div class="battery-chip-main" id="batteryPct">88.5%</div></div></div>
@@ -152,9 +145,7 @@
                 <div class="light front"></div>
                 <div class="light rear"></div>
 
-                <!-- place xe.jpg here (top-view image). Put a file named xe.jpg in same folder -->
                 <img src="xe.jpg" alt="VF3 top view" class="car2d-img" id="car2dImg" />
-
               </div>
 
               <iframe id="car3d" class="car-3d" title="VF3 3D" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" src="https://sketchfab.com/models/6a2caea4505347d18c47ef4d47840859/embed"></iframe>
@@ -175,7 +166,6 @@
           </div>
         </div>
 
-        <!-- CENTER: MAP -->
         <div class="panel">
           <div class="center-top"><div class="search-box" id="searchBox"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="Search destination"/><i class="fa-solid fa-microphone"></i></div></div>
 
@@ -194,7 +184,6 @@
           </div>
         </div>
 
-        <!-- RIGHT: CLIMATE -->
         <div class="panel">
           <div class="climate-tabs"><button class="active">Climate</button><button>Settings</button></div>
 
@@ -212,7 +201,6 @@
         </div>
       </div>
 
-      <!-- BOTTOM NAV (filled by apps.js) -->
       <div class="bottom-nav">
         <div class="bottom-nav-left" id="nav-left"></div>
         <div class="bottom-center">2.0° · Navigation active</div>
@@ -242,7 +230,7 @@
     btn2d.addEventListener('click', ()=>{ btn2d.classList.add('active'); btn3d.classList.remove('active'); car2d.style.display='block'; car3d.style.display='none'; });
     btn3d.addEventListener('click', ()=>{ btn3d.classList.add('active'); btn2d.classList.remove('active'); car2d.style.display='none'; car3d.style.display='block'; });
 
-    /***** bottom apps render (createAppIcon is below) *****/
+    /***** bottom apps render (fixed) *****/
     function createAppIcon(app, active){
       const div = document.createElement('div');
       div.className = 'bottom-icon' + (active ? ' active' : '');
@@ -253,16 +241,12 @@
         document.querySelectorAll('.bottom-icon').forEach(n => n.classList.remove('active'));
         div.classList.add('active');
 
-        // simple app-mode behavior:
-        // - if app is "drive" -> show search box (drive mode)
-        // - else -> hide search box (app opened)
+        // show/hide search box (simple behavior)
         const searchBox = document.getElementById('searchBox');
         if (searchBox) {
           if (app.id === 'drive') searchBox.style.display = 'flex';
           else searchBox.style.display = 'none';
         }
-
-        // you can add other app-specific behavior here (open drawer, show panel...)
       };
 
       return div;
@@ -273,10 +257,10 @@
       const left = apps.filter(a=>a.position==='left'), right = apps.filter(a=>a.position==='right');
       const navLeft = document.getElementById('nav-left'), navRight = document.getElementById('nav-right');
       left.forEach((app,i)=> navLeft.appendChild(createAppIcon(app, i===0)));
-      right.forEach(app=> navRight.appendChild(createAppIcon(app,false));
+      right.forEach(app=> navRight.appendChild(createAppIcon(app,false)));
     })();
 
-    /***** SCALE DASHBOARD TO FIT SCREEN (COVER behavior) *****/
+    /***** SCALE DASHBOARD TO FIT SCREEN (COVER) *****/
     function resizeDashboard(){
       const designW = 1440, designH = 810;
       const root = document.getElementById('dashboardRoot');
@@ -310,7 +294,7 @@
     window.addEventListener('orientationchange', ()=> setTimeout(resizeDashboard,140));
     resizeDashboard();
 
-    /***** minor UI simulated behaviors (time + play button) *****/
+    /***** misc UI *****/
     function updateTime(){ const el = document.getElementById('timeText'); const d=new Date(); const h = d.getHours()%12 || 12; const m = String(d.getMinutes()).padStart(2,'0'); const am = d.getHours()<12 ? 'AM' : 'PM'; el.textContent = `${h}:${m} ${am}`; }
     updateTime(); setInterval(updateTime,60000);
 
