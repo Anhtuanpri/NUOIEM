@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Nuôi Em - Donate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at top, #020617, #020617 60%);
+            color: #f9fafb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Đốm sáng bay lên */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(96, 165, 250, 0.8);
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.9);
+            animation: floatUp 12s linear infinite;
+            opacity: 0.35;
+            z-index: 0;
+        }
+        .particle:nth-child(1) { left: 10%; animation-duration: 11s; }
+        .particle:nth-child(2) { left: 25%; animation-duration: 13s; }
+        .particle:nth-child(3) { left: 40%; animation-duration: 10s; }
+        .particle:nth-child(4) { left: 60%; animation-duration: 12s; }
+        .particle:nth-child(5) { left: 75%; animation-duration: 14s; }
+        .particle:nth-child(6) { left: 90%; animation-duration: 9s; }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+
+        /* Cột chữ chạy dọc kiểu hacker */
+        .bg-code {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+            opacity: 0.55;
+        }
+
+        .bg-code-column {
+            position: absolute;
+            top: -160%;
+            width: 26px;
+            height: 220%;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            font-family: "JetBrains Mono","Fira Code",ui-monospace,monospace;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #e5e7eb; /* bạc sáng */
+            text-shadow:
+                0 0 8px rgba(148,163,184,0.8),
+                0 0 18px rgba(59,130,246,0.9);
+            animation: codeFall 7s linear infinite;
+            white-space: nowrap;
+        }
+
+        /* nhiều cột hơn */
+        .bg-code-column:nth-child(1) { left: 4%;  animation-duration: 7.5s; animation-delay: -1s; }
+        .bg-code-column:nth-child(2) { left: 11%; animation-duration: 6.5s; animation-delay: -3s; }
+        .bg-code-column:nth-child(3) { left: 18%; animation-duration: 8s;   animation-delay: -2s; }
+        .bg-code-column:nth-child(4) { left: 26%; animation-duration: 6.2s; animation-delay: -4s; }
+        .bg-code-column:nth-child(5) { left: 34%; animation-duration: 7.2s; animation-delay: -1.5s; }
+        .bg-code-column:nth-child(6) { left: 42%; animation-duration: 6.8s; animation-delay: -2.5s; }
+        .bg-code-column:nth-child(7) { left: 50%; animation-duration: 7.8s; animation-delay: -3.5s; }
+        .bg-code-column:nth-child(8) { left: 60%; animation-duration: 6.9s; animation-delay: -2.1s; }
+        .bg-code-column:nth-child(9) { left: 70%; animation-duration: 7.4s; animation-delay: -3.2s; }
+        .bg-code-column:nth-child(10){ left: 80%; animation-duration: 6.3s; animation-delay: -1.8s; }
+        .bg-code-column:nth-child(11){ left: 90%; animation-duration: 7.6s; animation-delay: -2.7s; }
+        .bg-code-column:nth-child(12){ left: 96%; animation-duration: 6.7s; animation-delay: -3.7s; }
+
+        @keyframes codeFall {
+            0%   { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .wrapper {
+            position: relative;
+            width: min(480px, 100%);
+            padding: 20px;
+            z-index: 2;
+        }
+
+        .card {
+            backdrop-filter: blur(18px);
+            background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            box-shadow:
+                0 0 35px rgba(56, 189, 248, 0.5),
+                0 0 100px rgba(37, 99, 235, 0.45);
+            padding: 22px 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background:
+                radial-gradient(circle at 0 0, rgba(59,130,246,0.35), transparent 60%),
+                radial-gradient(circle at 100% 100%, rgba(236,72,153,0.25), transparent 55%);
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        .title {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-weight: 700;
+            font-size: 14px;
+            color: #93c5fd;
+            margin-bottom: 6px;
+        }
+
+        .nuoiem {
+            text-align: center;
+            font-weight: 800;
+            font-size: 28px;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #f97316, #facc15, #22c55e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px rgba(248, 250, 252, 0.35);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #e5e7eb;
+            opacity: 0.9;
+            margin-bottom: 18px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #e5e7eb;
+        }
+        .info-row span.label {
+            opacity: 0.7;
+        }
+
+        .amount {
+            font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .amount.highlight {
+            color: #bef264;
+        }
+
+        .progress-bar {
+            margin-top: 12px;
+            background: rgba(15,23,42,0.9);
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.6);
+            padding: 3px;
+            box-shadow: inset 0 0 10px rgba(15,23,42,0.9);
+        }
+
+        .progress-inner {
+            height: 16px;
+            border-radius: 999px;
+            width: 0%;
+            background: linear-gradient(90deg, #22c55e, #a3e635);
+            box-shadow:
+                0 0 12px rgba(132,204,22,0.9),
+                0 0 25px rgba(34,197,94,0.8);
+            transition: width 0.7s ease-out;
+        }
+
+        .progress-text {
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #e5e7eb;
+            opacity: 0.85;
+        }
+
+        .section {
+            margin-top: 18px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(148,163,184,0.4);
+        }
+
+        .bank-btn {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(96,165,250,0.8);
+            background: radial-gradient(circle at 0 0, #1f2937, #1d4ed8);
+            color: #f9fafb;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow:
+                0 0 15px rgba(59,130,246,0.65),
+                0 0 40px rgba(56,189,248,0.7);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .bank-btn:hover {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow:
+                0 0 20px rgba(59,130,246,0.85),
+                0 0 50px rgba(56,189,248,0.9);
+            border-color: #bfdbfe;
+        }
+
+        .bank-btn span.icon {
+            font-size: 16px;
+        }
+
+        .bank-info {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px dashed rgba(148,163,184,0.7);
+            background: rgba(15,23,42,0.85);
+            font-size: 13px;
+            display: none;
+        }
+
+        .bank-line {
+            margin-bottom: 4px;
+        }
+        .bank-label {
+            opacity: 0.7;
+        }
+        .bank-value {
+            font-weight: 600;
+        }
+
+        .donate-form {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .donate-form input {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.7);
+            background: rgba(15,23,42,0.85);
+            color: #e5e7eb;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .donate-form input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px rgba(59,130,246,0.7);
+        }
+
+        .donate-form button {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #22c55e, #84cc16);
+            color: #f9fafb; /* chữ trắng sáng */
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow:
+                0 0 12px rgba(132,204,22,0.9),
+                0 0 30px rgba(22,163,74,0.8);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+
+        .donate-form button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+            box-shadow:
+                0 0 16px rgba(190,242,100,0.9),
+                0 0 40px rgba(34,197,94,0.9);
+        }
+
+        .hint {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 6px;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 18px;
+            left: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 50;
+            font-size: 13px;
+        }
+
+        .toast {
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.96);
+            border: 1px solid rgba(52,211,153,0.7);
+            color: #f9fafb;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow:
+                0 0 12px rgba(16,185,129,0.8),
+                0 0 24px rgba(45,212,191,0.7);
+            animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 2.6s forwards;
+        }
+
+        .toast-name {
+            font-weight: 600;
+        }
+        .toast-amount {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            color: #bbf7d0;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(12px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateY(-6px); }
+        }
+
+        .complete-badge {
+            margin-top: 14px;
+            padding: 8px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(190,242,100,0.9);
+            background: rgba(34,197,94,0.08);
+            font-size: 13px;
+            color: #bbf7d0;
+            display: none;
+            text-align: center;
+            box-shadow:
+                0 0 18px rgba(22,163,74,0.7),
+                0 0 36px rgba(190,242,100,0.7);
+        }
+
+        .complete-badge span {
+            font-weight: 700;
+        }
+
+        /* giờ chỉ làm mờ, không chặn click */
+        .disabled {
+            opacity: 0.5;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 18px 16px 16px;
+            }
+            .nuoiem {
+                font-size: 24px;
+            }
+            .subtitle {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Đốm sáng -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <!-- Nền chữ hacker bạc chạy dọc -->
+    <div class="bg-code">
+        <div class="bg-code-column">PASSWORD01010101</div>
+        <div class="bg-code-column">ACCESSGRANTED000</div>
+        <div class="bg-code-column">LOGIN_FAIL101010</div>
+        <div class="bg-code-column">010101SECURE999</div>
+        <div class="bg-code-column">ROOT_ADMIN77777</div>
+        <div class="bg-code-column">FIREWALL_BYPASS</div>
+        <div class="bg-code-column">ENCRYPTED_DATA</div>
+        <div class="bg-code-column">SYSTEM_OVERRIDDEN</div>
+        <div class="bg-code-column">NUOIEM_SAFE_MODE</div>
+        <div class="bg-code-column">CRYPTO_HASH256</div>
+        <div class="bg-code-column">PROTECTED_ACCESS</div>
+        <div class="bg-code-column">000111000111</div>
+    </div>
+
+    <div class="wrapper">
+        <div class="card">
+            <div class="title">Community Fund</div>
+            <div class="nuoiem">NUÔI EM</div>
+            <div class="subtitle">Góp từng chút nhỏ để hoàn thành mục tiêu 1 tỷ nuôi em.</div>
+
+            <div class="info">
+                <div class="info-row">
+                    <span class="label">Đã chuyển:</span>
+                    <span class="amount highlight" id="totalAmount">0đ</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Mục tiêu:</span>
+                    <span class="amount" id="targetAmount">1.000.000.000đ</span>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-inner" id="progressInner"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressPercent">0%</span>
+                <span id="progressRemain">Còn thiếu: 1.000.000.000đ</span>
+            </div>
+
+            <div class="section">
+                <button class="bank-btn" id="toggleBank">
+                    <span class="icon">💳</span>
+                    <span>Hiện thông tin chuyển khoản</span>
+                </button>
+                <div class="bank-info" id="bankInfo">
+                    <div class="bank-line">
+                        <span class="bank-label">Ngân hàng: </span>
+                        <span class="bank-value">MB Bank</span>
+                    </div>
+                    <div class="bank-line">
+                        <span class="bank-label">Số tài khoản: </span>
+                        <span class="bank-value">9704 22xx xxxx</span>
+                    </div>
+                    <div class="bank-line">
+                        <span class="bank-label">Chủ TK: </span>
+                        <span class="bank-value">NGUYEN VAN A</span>
+                    </div>
+                    <div class="bank-line">
+                        <span class="bank-label">Nội dung: </span>
+                        <span class="bank-value">NUOI EM + SĐT</span>
+                    </div>
+                </div>
+
+                <div class="donate-form" id="donateForm">
+                    <input type="number" id="inputAmount" placeholder="Nhập số tiền (đ) hoặc bỏ trống để RESET..." min="1000">
+                    <button id="addButton">+ Cập nhật</button>
+                </div>
+                <div class="hint">
+                    ✔ Bỏ trống rồi bấm <b>+ Cập nhật</b> = RESET toàn bộ dữ liệu.  
+                    ✔ Dữ liệu lưu bằng localStorage, load lại không mất.
+                </div>
+
+                <div class="complete-badge" id="completeBadge">
+                    🎉 <span>Hoàn thành 1.000.000.000đ!</span>
+                    Cảm ơn mọi người đã cùng nuôi em. Bill đã đóng & tắt thông báo tự động.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast ảo -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        const TARGET_DEFAULT = 1_000_000_000; // 1 tỷ
+
+        const STORAGE_KEYS = {
+            total: "nuoiem_total",
+            target: "nuoiem_target",
+            completed: "nuoiem_completed"
+        };
+
+        let total = 0;
+        let target = TARGET_DEFAULT;
+        let isCompleted = false;
+        let toastInterval = null;
+
+        const totalAmountEl = document.getElementById("totalAmount");
+        const targetAmountEl = document.getElementById("targetAmount");
+        const progressInnerEl = document.getElementById("progressInner");
+        const progressPercentEl = document.getElementById("progressPercent");
+        const progressRemainEl = document.getElementById("progressRemain");
+        const bankInfoEl = document.getElementById("bankInfo");
+        const donateFormEl = document.getElementById("donateForm");
+        const completeBadgeEl = document.getElementById("completeBadge");
+        const toastContainerEl = document.getElementById("toastContainer");
+        const inputAmountEl = document.getElementById("inputAmount");
+        const addButtonEl = document.getElementById("addButton");
+        const toggleBankEl = document.getElementById("toggleBank");
+
+        function formatCurrency(vnd) {
+            return vnd.toLocaleString("vi-VN") + "đ";
+        }
+
+        function loadState() {
+            const storedTotal = localStorage.getItem(STORAGE_KEYS.total);
+            const storedTarget = localStorage.getItem(STORAGE_KEYS.target);
+            const storedCompleted = localStorage.getItem(STORAGE_KEYS.completed);
+
+            if (storedTotal !== null && !isNaN(Number(storedTotal))) {
+                total = Number(storedTotal);
+            }
+            if (storedTarget !== null && !isNaN(Number(storedTarget))) {
+                target = Number(storedTarget) || TARGET_DEFAULT;
+            }
+            if (storedCompleted === "true") {
+                isCompleted = true;
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEYS.total, String(total));
+            localStorage.setItem(STORAGE_KEYS.target, String(target));
+            localStorage.setItem(STORAGE_KEYS.completed, String(isCompleted));
+        }
+
+        function resetState() {
+            total = 0;
+            target = TARGET_DEFAULT;
+            isCompleted = false;
+            localStorage.removeItem(STORAGE_KEYS.total);
+            localStorage.removeItem(STORAGE_KEYS.target);
+            localStorage.removeItem(STORAGE_KEYS.completed);
+
+            if (toastInterval) clearInterval(toastInterval);
+            updateUI();
+            initFakeToasts();
+        }
+
+        function updateUI() {
+            totalAmountEl.textContent = formatCurrency(total);
+            targetAmountEl.textContent = formatCurrency(target);
+
+            const percent = Math.min((total / target) * 100, 100);
+            progressInnerEl.style.width = percent.toFixed(2) + "%";
+            progressPercentEl.textContent = percent.toFixed(1) + "%";
+
+            const remaining = Math.max(target - total, 0);
+            progressRemainEl.textContent = remaining === 0
+                ? "Đã đủ 1.000.000.000đ"
+                : "Còn thiếu: " + formatCurrency(remaining);
+
+            if (total >= target && !isCompleted) {
+                isCompleted = true;
+                saveState();
+            }
+
+            if (isCompleted || total >= target) {
+                completeBadgeEl.style.display = "block";
+                donateFormEl.classList.add("disabled"); // giờ chỉ mờ thôi, vẫn ấn được nút
+                if (toastInterval) {
+                    clearInterval(toastInterval);
+                    toastInterval = null;
+                }
+            } else {
+                completeBadgeEl.style.display = "none";
+                donateFormEl.classList.remove("disabled");
+            }
+        }
+
+        function addToTotal(value) {
+            if (isCompleted) return;
+            total += value;
+            if (total >= target) {
+                total = target;
+            }
+            saveState();
+            updateUI();
+        }
+
+        function handleAddAmount() {
+            const raw = inputAmountEl.value.trim();
+
+            // Không nhập số -> reset
+            if (!raw) {
+                const ok = confirm("Bạn muốn RESET toàn bộ dữ liệu donate (về 0đ)?");
+                if (ok) {
+                    resetState();
+                }
+                return;
+            }
+
+            const value = Number(raw);
+            if (isNaN(value) || value <= 0) {
+                alert("Vui lòng nhập số tiền hợp lệ (> 0).");
+                return;
+            }
+
+            addToTotal(value);
+            inputAmountEl.value = "";
+        }
+
+        const NAMES = [
+            "Nguyễn Minh A",
+            "Trần Thị B",
+            "Lê Văn C",
+            "Phạm Đức D",
+            "Hoàng Mai",
+            "Vũ Khánh",
+            "Đinh Tuấn",
+            "Bùi Lan",
+            "Phan Huy",
+            "Đoàn Anh"
+        ];
+
+        const FAKE_AMOUNTS = [
+            100_000,
+            200_000,
+            1_000_000
+        ];
+
+        function randomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function showFakeToast() {
+            if (isCompleted || total >= target) return;
+
+            const name = randomItem(NAMES);
+            const amount = randomItem(FAKE_AMOUNTS);
+
+            addToTotal(amount);
+
+            const toast = document.createElement("div");
+            toast.className = "toast";
+
+            const emoji = document.createElement("div");
+            emoji.textContent = "✅";
+
+            const text = document.createElement("div");
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "toast-name";
+            nameSpan.textContent = name + " ";
+
+            const msgSpan = document.createElement("span");
+            msgSpan.textContent = "vừa chuyển ";
+
+            const amountSpan = document.createElement("span");
+            amountSpan.className = "toast-amount";
+            amountSpan.textContent = formatCurrency(amount);
+
+            text.appendChild(nameSpan);
+            text.appendChild(msgSpan);
+            text.appendChild(amountSpan);
+
+            toast.appendChild(emoji);
+            toast.appendChild(text);
+
+            toastContainerEl.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function initFakeToasts() {
+            if (isCompleted || total >= target) return;
+            toastInterval = setInterval(showFakeToast, 3000);
+        }
+
+        toggleBankEl.addEventListener("click", () => {
+            const isShown = bankInfoEl.style.display === "block";
+            bankInfoEl.style.display = isShown ? "none" : "block";
+        });
+
+        addButtonEl.addEventListener("click", handleAddAmount);
+        inputAmountEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddAmount();
+            }
+        });
+
+        loadState();
+        updateUI();
+        initFakeToasts();
+    </script>
+</body>
+</html>
