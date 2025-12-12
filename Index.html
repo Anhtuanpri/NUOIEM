@@ -1,711 +1,833 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Nuôi Em - Donate</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>VF3 Car Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(circle at top, #020617, #020617 60%);
-            color: #f9fafb;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+  <!-- Leaflet map -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-        /* Đốm sáng bay lên */
-        .particle {
-            position: fixed;
-            width: 4px;
-            height: 4px;
-            border-radius: 999px;
-            background: rgba(96, 165, 250, 0.8);
-            box-shadow: 0 0 12px rgba(96, 165, 250, 0.9);
-            animation: floatUp 12s linear infinite;
-            opacity: 0.35;
-            z-index: 0;
-        }
-        .particle:nth-child(1) { left: 10%; animation-duration: 11s; }
-        .particle:nth-child(2) { left: 25%; animation-duration: 13s; }
-        .particle:nth-child(3) { left: 40%; animation-duration: 10s; }
-        .particle:nth-child(4) { left: 60%; animation-duration: 12s; }
-        .particle:nth-child(5) { left: 75%; animation-duration: 14s; }
-        .particle:nth-child(6) { left: 90%; animation-duration: 9s; }
+  <!-- Icon (optional) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    referrerpolicy="no-referrer"
+  />
 
-        @keyframes floatUp {
-            0% { transform: translateY(100vh); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translateY(-10vh); opacity: 0; }
-        }
+  <style>
+    :root {
+      --bg: #020916;
+      --bg-panel: #050f1f;
+      --bg-panel-soft: #071222;
+      --accent: #19d4ff;
+      --accent-soft: #19d4ff33;
+      --text-main: #f4f8ff;
+      --text-sub: #7d8ba4;
+      --danger: #ff4b6a;
+      --success: #3cff9b;
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+    }
 
-        /* Cột chữ chạy dọc kiểu hacker */
-        .bg-code {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 1;
-            opacity: 0.55;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
 
-        .bg-code-column {
-            position: absolute;
-            top: -160%;
-            width: 26px;
-            height: 220%;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            font-family: "JetBrains Mono","Fira Code",ui-monospace,monospace;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-size: 13px;
-            letter-spacing: 2px;
-            color: #e5e7eb; /* bạc sáng */
-            text-shadow:
-                0 0 8px rgba(148,163,184,0.8),
-                0 0 18px rgba(59,130,246,0.9);
-            animation: codeFall 7s linear infinite;
-            white-space: nowrap;
-        }
+    body {
+      background: radial-gradient(circle at top, #071932 0, #020714 40%, #000 100%);
+      color: var(--text-main);
+      overflow: hidden;
+    }
 
-        /* nhiều cột hơn */
-        .bg-code-column:nth-child(1) { left: 4%;  animation-duration: 7.5s; animation-delay: -1s; }
-        .bg-code-column:nth-child(2) { left: 11%; animation-duration: 6.5s; animation-delay: -3s; }
-        .bg-code-column:nth-child(3) { left: 18%; animation-duration: 8s;   animation-delay: -2s; }
-        .bg-code-column:nth-child(4) { left: 26%; animation-duration: 6.2s; animation-delay: -4s; }
-        .bg-code-column:nth-child(5) { left: 34%; animation-duration: 7.2s; animation-delay: -1.5s; }
-        .bg-code-column:nth-child(6) { left: 42%; animation-duration: 6.8s; animation-delay: -2.5s; }
-        .bg-code-column:nth-child(7) { left: 50%; animation-duration: 7.8s; animation-delay: -3.5s; }
-        .bg-code-column:nth-child(8) { left: 60%; animation-duration: 6.9s; animation-delay: -2.1s; }
-        .bg-code-column:nth-child(9) { left: 70%; animation-duration: 7.4s; animation-delay: -3.2s; }
-        .bg-code-column:nth-child(10){ left: 80%; animation-duration: 6.3s; animation-delay: -1.8s; }
-        .bg-code-column:nth-child(11){ left: 90%; animation-duration: 7.6s; animation-delay: -2.7s; }
-        .bg-code-column:nth-child(12){ left: 96%; animation-duration: 6.7s; animation-delay: -3.7s; }
+    .root {
+      height: 100vh;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        @keyframes codeFall {
-            0%   { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
 
-        .wrapper {
-            position: relative;
-            width: min(480px, 100%);
-            padding: 20px;
-            z-index: 2;
-        }
+    .top-bar-left span:first-child {
+      color: var(--text-main);
+      font-weight: 600;
+    }
 
-        .card {
-            backdrop-filter: blur(18px);
-            background: radial-gradient(circle at top, rgba(15,23,42,0.96), rgba(15,23,42,0.9));
-            border-radius: 20px;
-            border: 1px solid rgba(148, 163, 184, 0.4);
-            box-shadow:
-                0 0 35px rgba(56, 189, 248, 0.5),
-                0 0 100px rgba(37, 99, 235, 0.45);
-            padding: 22px 20px 20px;
-            position: relative;
-            overflow: hidden;
-        }
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
-        .card::before {
-            content: "";
-            position: absolute;
-            inset: -40%;
-            background:
-                radial-gradient(circle at 0 0, rgba(59,130,246,0.35), transparent 60%),
-                radial-gradient(circle at 100% 100%, rgba(236,72,153,0.25), transparent 55%);
-            opacity: 0.4;
-            z-index: -1;
-        }
+    .top-bar-right i {
+      font-size: 14px;
+    }
 
-        .title {
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.14em;
-            font-weight: 700;
-            font-size: 14px;
-            color: #93c5fd;
-            margin-bottom: 6px;
-        }
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 2.1fr 1.3fr;
+      gap: 12px;
+    }
 
-        .nuoiem {
-            text-align: center;
-            font-weight: 800;
-            font-size: 28px;
-            margin-bottom: 12px;
-            background: linear-gradient(90deg, #f97316, #facc15, #22c55e);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 18px rgba(248, 250, 252, 0.35);
-        }
+    .panel {
+      background: linear-gradient(145deg, #050c18, #020714);
+      border-radius: 28px;
+      box-shadow: 0 0 25px #000000aa;
+      padding: 16px 18px;
+      position: relative;
+      overflow: hidden;
+    }
 
-        .subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #e5e7eb;
-            opacity: 0.9;
-            margin-bottom: 18px;
-        }
+    /* LEFT PANEL – CAR STATUS */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-            font-size: 13px;
-            color: #e5e7eb;
-        }
-        .info-row span.label {
-            opacity: 0.7;
-        }
+    .battery-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
 
-        .amount {
-            font-family: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
-            font-size: 18px;
-            font-weight: 700;
-        }
+    .battery-row .battery-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at left, #19d4ff33 0, transparent 70%);
+    }
 
-        .amount.highlight {
-            color: #bef264;
-        }
+    .battery-bar {
+      width: 28px;
+      height: 14px;
+      border-radius: 4px;
+      border: 2px solid var(--accent);
+      position: relative;
+    }
 
-        .progress-bar {
-            margin-top: 12px;
-            background: rgba(15,23,42,0.9);
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.6);
-            padding: 3px;
-            box-shadow: inset 0 0 10px rgba(15,23,42,0.9);
-        }
+    .battery-bar::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--success));
+    }
 
-        .progress-inner {
-            height: 16px;
-            border-radius: 999px;
-            width: 0%;
-            background: linear-gradient(90deg, #22c55e, #a3e635);
-            box-shadow:
-                0 0 12px rgba(132,204,22,0.9),
-                0 0 25px rgba(34,197,94,0.8);
-            transition: width 0.7s ease-out;
-        }
+    .stat-chips {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+    }
 
-        .progress-text {
-            margin-top: 6px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #e5e7eb;
-            opacity: 0.85;
-        }
+    .chip {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #070f1f;
+      color: var(--text-sub);
+      border: 1px solid #1a263b;
+    }
 
-        .section {
-            margin-top: 18px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(148,163,184,0.4);
-        }
+    .chip strong {
+      color: var(--accent);
+    }
 
-        .bank-btn {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: 999px;
-            border: 1px solid rgba(96,165,250,0.8);
-            background: radial-gradient(circle at 0 0, #1f2937, #1d4ed8);
-            color: #f9fafb;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            box-shadow:
-                0 0 15px rgba(59,130,246,0.65),
-                0 0 40px rgba(56,189,248,0.7);
-            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-        }
+    .car-viewport-wrapper {
+      flex: 1;
+      margin-top: 4px;
+      border-radius: 24px;
+      background: radial-gradient(circle at top, #12345a 0, #020814 60%);
+      position: relative;
+      overflow: hidden;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .bank-btn:hover {
-            transform: translateY(-1px) scale(1.02);
-            box-shadow:
-                0 0 20px rgba(59,130,246,0.85),
-                0 0 50px rgba(56,189,248,0.9);
-            border-color: #bfdbfe;
-        }
+    .car-viewport-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
 
-        .bank-btn span.icon {
-            font-size: 16px;
-        }
+    .toggle-2d3d {
+      border-radius: 999px;
+      padding: 2px;
+      background: #050c18;
+      display: inline-flex;
+      gap: 2px;
+    }
 
-        .bank-info {
-            margin-top: 10px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px dashed rgba(148,163,184,0.7);
-            background: rgba(15,23,42,0.85);
-            font-size: 13px;
-            display: none;
-        }
+    .toggle-2d3d button {
+      border: none;
+      outline: none;
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text-sub);
+      cursor: pointer;
+    }
 
-        .bank-line {
-            margin-bottom: 4px;
-        }
-        .bank-label {
-            opacity: 0.7;
-        }
-        .bank-value {
-            font-weight: 600;
-        }
+    .toggle-2d3d button.active {
+      background: linear-gradient(135deg, #18b6ff, #74ffcf);
+      color: #020714;
+      font-weight: 600;
+    }
 
-        .donate-form {
-            margin-top: 12px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
+    .car-viewport {
+      flex: 1;
+      margin-top: 8px;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      background: radial-gradient(circle at top, #1c3355 0, #020714 60%);
+    }
 
-        .donate-form input {
-            flex: 1;
-            padding: 8px 10px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.7);
-            background: rgba(15,23,42,0.85);
-            color: #e5e7eb;
-            font-size: 13px;
-            outline: none;
-        }
+    /* 2D CAR */
+    .car-2d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
 
-        .donate-form input:focus {
-            border-color: #60a5fa;
-            box-shadow: 0 0 10px rgba(59,130,246,0.7);
-        }
+    .car-2d .car-body {
+      position: absolute;
+      inset: 18% 22%;
+      border-radius: 40px;
+      background: radial-gradient(circle at top, #4f7cff, #1b2438);
+      box-shadow: 0 0 28px #00f2ff55;
+    }
 
-        .donate-form button {
-            padding: 8px 14px;
-            border-radius: 999px;
-            border: none;
-            background: linear-gradient(135deg, #22c55e, #84cc16);
-            color: #f9fafb; /* chữ trắng sáng */
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            box-shadow:
-                0 0 12px rgba(132,204,22,0.9),
-                0 0 30px rgba(22,163,74,0.8);
-            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-        }
+    .car-2d .lane {
+      position: absolute;
+      width: 4px;
+      top: 10%;
+      bottom: 10%;
+      border-radius: 999px;
+      background: linear-gradient(
+        180deg,
+        transparent 0,
+        #15ffb3aa 20%,
+        #15ffb3aa 80%,
+        transparent 100%
+      );
+    }
 
-        .donate-form button:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
-            box-shadow:
-                0 0 16px rgba(190,242,100,0.9),
-                0 0 40px rgba(34,197,94,0.9);
-        }
+    .car-2d .lane.l-left {
+      left: 10%;
+    }
 
-        .hint {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-top: 6px;
-        }
+    .car-2d .lane.l-right {
+      right: 10%;
+    }
 
-        .toast-container {
-            position: fixed;
-            bottom: 18px;
-            left: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            z-index: 50;
-            font-size: 13px;
-        }
+    .car-2d .light {
+      position: absolute;
+      width: 70%;
+      height: 26%;
+      left: 15%;
+      border-radius: 60%;
+      filter: blur(12px);
+      opacity: 0.8;
+    }
 
-        .toast {
-            padding: 8px 12px;
-            border-radius: 999px;
-            background: rgba(15,23,42,0.96);
-            border: 1px solid rgba(52,211,153,0.7);
-            color: #f9fafb;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow:
-                0 0 12px rgba(16,185,129,0.8),
-                0 0 24px rgba(45,212,191,0.7);
-            animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 2.6s forwards;
-        }
+    .car-2d .light.front {
+      top: 4%;
+      background: radial-gradient(circle, #0dffb6, transparent 60%);
+    }
 
-        .toast-name {
-            font-weight: 600;
-        }
-        .toast-amount {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            color: #bbf7d0;
-        }
+    .car-2d .light.rear {
+      bottom: 4%;
+      background: radial-gradient(circle, #ff3b6e, transparent 60%);
+    }
 
-        @keyframes slideUp {
-            from { transform: translateY(12px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateY(-6px); }
-        }
+    /* 3D CAR (Sketchfab iframe) */
+    .car-3d {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
 
-        .complete-badge {
-            margin-top: 14px;
-            padding: 8px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(190,242,100,0.9);
-            background: rgba(34,197,94,0.08);
-            font-size: 13px;
-            color: #bbf7d0;
-            display: none;
-            text-align: center;
-            box-shadow:
-                0 0 18px rgba(22,163,74,0.7),
-                0 0 36px rgba(190,242,100,0.7);
-        }
+    .quick-controls {
+      margin-top: 10px;
+      background: #020815;
+      border-radius: 18px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .complete-badge span {
-            font-weight: 700;
-        }
+    .quick-controls span.title {
+      color: var(--text-main);
+      font-weight: 500;
+      font-size: 13px;
+    }
 
-        /* giờ chỉ làm mờ, không chặn click */
-        .disabled {
-            opacity: 0.5;
-        }
+    /* CENTER PANEL – MAP + MEDIA */
+    .center-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-        @media (max-width: 500px) {
-            .card {
-                padding: 18px 16px 16px;
-            }
-            .nuoiem {
-                font-size: 24px;
-            }
-            .subtitle {
-                font-size: 13px;
-            }
-        }
-    </style>
+    .search-box {
+      background: rgba(4, 14, 30, 0.95);
+      border-radius: 999px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-sub);
+      border: 1px solid #1b283b;
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    #map {
+      flex: 1;
+      border-radius: 22px;
+      overflow: hidden;
+      margin-top: 4px;
+      box-shadow: 0 0 30px #000000aa;
+    }
+
+    .media-bar {
+      margin-top: 10px;
+      background: #020815;
+      border-radius: 18px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .media-cover {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top, #ff4b85, #3b0a72);
+      overflow: hidden;
+    }
+
+    .media-info {
+      flex: 1;
+      font-size: 12px;
+    }
+
+    .media-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .media-artist {
+      color: var(--text-sub);
+    }
+
+    .media-progress {
+      height: 3px;
+      border-radius: 999px;
+      background: #101624;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .media-progress-inner {
+      width: 35%;
+      height: 100%;
+      background: linear-gradient(90deg, #18b6ff, #6dffe3);
+    }
+
+    .media-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .circle-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      background: radial-gradient(circle at top, #18b6ff, #0e7ee4);
+      color: #fff;
+      box-shadow: 0 0 16px #18b6ff66;
+    }
+
+    .circle-btn.small {
+      width: 26px;
+      height: 26px;
+      background: #071120;
+      box-shadow: none;
+      color: var(--text-sub);
+    }
+
+    /* RIGHT PANEL – CLIMATE */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .climate-tabs {
+      display: flex;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .climate-tabs button {
+      flex: 1;
+      border-radius: 999px;
+      padding: 6px 0;
+      border: none;
+      background: #050c18;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .climate-tabs button.active {
+      background: linear-gradient(135deg, #18b6ff, #6dffe3);
+      color: #020714;
+      font-weight: 600;
+    }
+
+    .climate-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .temp-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+    }
+
+    .temp-col .temp {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .temp-col button {
+      background: #050c18;
+      border-radius: 999px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .fan-dial {
+      height: 140px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #123458, #050b18);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px #000;
+    }
+
+    .fan-dial::before {
+      content: "";
+      position: absolute;
+      width: 60%;
+      height: 60%;
+      border-radius: 50%;
+      border: 2px solid #19d4ff55;
+      box-shadow: 0 0 12px #19d4ffaa;
+    }
+
+    .fan-icon {
+      font-size: 26px;
+      color: var(--accent);
+      animation: spin 5s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .climate-bottom-list {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .climate-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 4px;
+    }
+
+    .pill-btn {
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid #1b283b;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .pill-btn.primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      margin-top: 4px;
+      background: rgba(2, 9, 22, 0.9);
+      border-radius: 999px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+
+    .bottom-nav-left,
+    .bottom-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .bottom-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 11px;
+      opacity: 0.65;
+      cursor: pointer;
+    }
+
+    .bottom-icon.active {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    .bottom-icon i {
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .bottom-center-text {
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    @media (max-width: 1024px) {
+      .main {
+        grid-template-columns: 1fr;
+        grid-auto-rows: 300px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Đốm sáng -->
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-
-    <!-- Nền chữ hacker bạc chạy dọc -->
-    <div class="bg-code">
-        <div class="bg-code-column">PASSWORD01010101</div>
-        <div class="bg-code-column">ACCESSGRANTED000</div>
-        <div class="bg-code-column">LOGIN_FAIL101010</div>
-        <div class="bg-code-column">010101SECURE999</div>
-        <div class="bg-code-column">ROOT_ADMIN77777</div>
-        <div class="bg-code-column">FIREWALL_BYPASS</div>
-        <div class="bg-code-column">ENCRYPTED_DATA</div>
-        <div class="bg-code-column">SYSTEM_OVERRIDDEN</div>
-        <div class="bg-code-column">NUOIEM_SAFE_MODE</div>
-        <div class="bg-code-column">CRYPTO_HASH256</div>
-        <div class="bg-code-column">PROTECTED_ACCESS</div>
-        <div class="bg-code-column">000111000111</div>
+<div class="root">
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <span>Saturn OS</span> · <span>Saturn 1 · Oct 2</span>
     </div>
+    <div class="top-bar-right">
+      <span>10:30 PM</span>
+      <i class="fa-solid fa-signal"></i>
+      <i class="fa-solid fa-wifi"></i>
+      <i class="fa-solid fa-battery-three-quarters"></i>
+    </div>
+  </div>
 
-    <div class="wrapper">
-        <div class="card">
-            <div class="title">Community Fund</div>
-            <div class="nuoiem">NUÔI EM</div>
-            <div class="subtitle">Góp từng chút nhỏ để hoàn thành mục tiêu 1 tỷ nuôi em.</div>
-
-            <div class="info">
-                <div class="info-row">
-                    <span class="label">Đã chuyển:</span>
-                    <span class="amount highlight" id="totalAmount">0đ</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Mục tiêu:</span>
-                    <span class="amount" id="targetAmount">1.000.000.000đ</span>
-                </div>
-            </div>
-
-            <div class="progress-bar">
-                <div class="progress-inner" id="progressInner"></div>
-            </div>
-            <div class="progress-text">
-                <span id="progressPercent">0%</span>
-                <span id="progressRemain">Còn thiếu: 1.000.000.000đ</span>
-            </div>
-
-            <div class="section">
-                <button class="bank-btn" id="toggleBank">
-                    <span class="icon">💳</span>
-                    <span>Hiện thông tin chuyển khoản</span>
-                </button>
-                <div class="bank-info" id="bankInfo">
-                    <div class="bank-line">
-                        <span class="bank-label">Ngân hàng: </span>
-                        <span class="bank-value">MB Bank</span>
-                    </div>
-                    <div class="bank-line">
-                        <span class="bank-label">Số tài khoản: </span>
-                        <span class="bank-value">9704 22xx xxxx</span>
-                    </div>
-                    <div class="bank-line">
-                        <span class="bank-label">Chủ TK: </span>
-                        <span class="bank-value">NGUYEN VAN A</span>
-                    </div>
-                    <div class="bank-line">
-                        <span class="bank-label">Nội dung: </span>
-                        <span class="bank-value">NUOI EM + SĐT</span>
-                    </div>
-                </div>
-
-                <div class="donate-form" id="donateForm">
-                    <input type="number" id="inputAmount" placeholder="Nhập số tiền (đ) hoặc bỏ trống để RESET..." min="1000">
-                    <button id="addButton">+ Cập nhật</button>
-                </div>
-                <div class="hint">
-                    ✔ Bỏ trống rồi bấm <b>+ Cập nhật</b> = RESET toàn bộ dữ liệu.  
-                    ✔ Dữ liệu lưu bằng localStorage, load lại không mất.
-                </div>
-
-                <div class="complete-badge" id="completeBadge">
-                    🎉 <span>Hoàn thành 1.000.000.000đ!</span>
-                    Cảm ơn mọi người đã cùng nuôi em. Bill đã đóng & tắt thông báo tự động.
-                </div>
-            </div>
+  <div class="main">
+    <!-- LEFT PANEL -->
+    <div class="panel left-panel">
+      <div class="battery-row">
+        <div class="battery-box">
+          <div class="battery-bar"></div>
+          <div>
+            <div style="font-size:12px; color:var(--text-sub)">Battery</div>
+            <div style="font-size:14px; font-weight:600">88.5%</div>
+          </div>
         </div>
+        <div class="stat-chips">
+          <div class="chip">Range: <strong>215.3 km</strong></div>
+          <div class="chip">Speed: <strong>20 km/h</strong></div>
+        </div>
+      </div>
+
+      <div class="car-viewport-wrapper">
+        <div class="car-viewport-header">
+          <span style="font-size:13px; color:var(--text-main)">VF3 Status</span>
+          <div class="toggle-2d3d">
+            <button id="btn-2d" class="active">2D</button>
+            <button id="btn-3d">3D</button>
+          </div>
+        </div>
+
+        <div class="car-viewport">
+          <!-- 2D view -->
+          <div id="car2d" class="car-2d">
+            <div class="lane l-left"></div>
+            <div class="lane l-right"></div>
+            <div class="light front"></div>
+            <div class="light rear"></div>
+            <div class="car-body"></div>
+          </div>
+
+          <!-- 3D view (Sketchfab) -->
+          <iframe
+            id="car3d"
+            class="car-3d"
+            style="display:none"
+            title="Vinfast VF3"
+            allow="autoplay; fullscreen; xr-spatial-tracking"
+            allowfullscreen
+            mozallowfullscreen="true"
+            webkitallowfullscreen="true"
+            src="https://sketchfab.com/models/6a2caea4505347d18c47ef4d47840859/embed"
+          ></iframe>
+        </div>
+      </div>
+
+      <div class="quick-controls">
+        <div>
+          <span class="title">Quick controls</span><br />
+          <span>Lights · Mirrors · Locks</span>
+        </div>
+        <i class="fa-solid fa-sliders"></i>
+      </div>
     </div>
 
-    <!-- Toast ảo -->
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- CENTER PANEL -->
+    <div class="panel center-panel">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input placeholder="Search destination" />
+        <i class="fa-solid fa-microphone"></i>
+      </div>
 
-    <script>
-        const TARGET_DEFAULT = 1_000_000_000; // 1 tỷ
+      <div id="map"></div>
 
-        const STORAGE_KEYS = {
-            total: "nuoiem_total",
-            target: "nuoiem_target",
-            completed: "nuoiem_completed"
-        };
+      <div class="media-bar">
+        <div class="media-cover"></div>
+        <div class="media-info">
+          <div class="media-title">Nis raddbry</div>
+          <div class="media-artist">Salvin Orane</div>
+          <div class="media-progress">
+            <div class="media-progress-inner"></div>
+          </div>
+        </div>
+        <div class="media-controls">
+          <button class="circle-btn small">
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+          <button class="circle-btn">
+            <i class="fa-solid fa-play"></i>
+          </button>
+          <button class="circle-btn small">
+            <i class="fa-solid fa-forward-step"></i>
+          </button>
+        </div>
+      </div>
+    </div>
 
-        let total = 0;
-        let target = TARGET_DEFAULT;
-        let isCompleted = false;
-        let toastInterval = null;
+    <!-- RIGHT PANEL -->
+    <div class="panel right-panel">
+      <div class="climate-tabs">
+        <button class="active">Climate</button>
+        <button>Settings</button>
+      </div>
 
-        const totalAmountEl = document.getElementById("totalAmount");
-        const targetAmountEl = document.getElementById("targetAmount");
-        const progressInnerEl = document.getElementById("progressInner");
-        const progressPercentEl = document.getElementById("progressPercent");
-        const progressRemainEl = document.getElementById("progressRemain");
-        const bankInfoEl = document.getElementById("bankInfo");
-        const donateFormEl = document.getElementById("donateForm");
-        const completeBadgeEl = document.getElementById("completeBadge");
-        const toastContainerEl = document.getElementById("toastContainer");
-        const inputAmountEl = document.getElementById("inputAmount");
-        const addButtonEl = document.getElementById("addButton");
-        const toggleBankEl = document.getElementById("toggleBank");
+      <div class="climate-main">
+        <div class="temp-col">
+          <button><i class="fa-solid fa-chevron-up"></i></button>
+          <div class="temp" id="temp-left">50°</div>
+          <button><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
 
-        function formatCurrency(vnd) {
-            return vnd.toLocaleString("vi-VN") + "đ";
-        }
+        <div class="fan-dial">
+          <i class="fa-solid fa-fan fan-icon"></i>
+        </div>
 
-        function loadState() {
-            const storedTotal = localStorage.getItem(STORAGE_KEYS.total);
-            const storedTarget = localStorage.getItem(STORAGE_KEYS.target);
-            const storedCompleted = localStorage.getItem(STORAGE_KEYS.completed);
+        <div class="temp-col">
+          <button><i class="fa-solid fa-chevron-up"></i></button>
+          <div class="temp" id="temp-right">50°</div>
+          <button><i class="fa-solid fa-chevron-down"></i></button>
+        </div>
+      </div>
 
-            if (storedTotal !== null && !isNaN(Number(storedTotal))) {
-                total = Number(storedTotal);
-            }
-            if (storedTarget !== null && !isNaN(Number(storedTarget))) {
-                target = Number(storedTarget) || TARGET_DEFAULT;
-            }
-            if (storedCompleted === "true") {
-                isCompleted = true;
-            }
-        }
+      <div class="climate-bottom-list">
+        <div class="climate-item">
+          <span>Battery</span>
+          <button class="pill-btn">Details</button>
+        </div>
+        <div class="climate-item">
+          <span>Savings</span>
+          <button class="pill-btn">History</button>
+        </div>
+        <div class="climate-item">
+          <span>Mode</span>
+          <button class="pill-btn primary">ECO</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        function saveState() {
-            localStorage.setItem(STORAGE_KEYS.total, String(total));
-            localStorage.setItem(STORAGE_KEYS.target, String(target));
-            localStorage.setItem(STORAGE_KEYS.completed, String(isCompleted));
-        }
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="bottom-nav-left">
+      <div class="bottom-icon active">
+        <i class="fa-solid fa-car-side"></i>
+        <span>Drive</span>
+      </div>
+      <div class="bottom-icon">
+        <i class="fa-solid fa-music"></i>
+        <span>Media</span>
+      </div>
+      <div class="bottom-icon">
+        <i class="fa-solid fa-route"></i>
+        <span>Route</span>
+      </div>
+    </div>
 
-        function resetState() {
-            total = 0;
-            target = TARGET_DEFAULT;
-            isCompleted = false;
-            localStorage.removeItem(STORAGE_KEYS.total);
-            localStorage.removeItem(STORAGE_KEYS.target);
-            localStorage.removeItem(STORAGE_KEYS.completed);
+    <div class="bottom-center-text">
+      2.0 ° · Navigation active
+    </div>
 
-            if (toastInterval) clearInterval(toastInterval);
-            updateUI();
-            initFakeToasts();
-        }
+    <div class="bottom-nav-right">
+      <div class="bottom-icon">
+        <i class="fa-solid fa-seat-airline"></i>
+        <span>Seats</span>
+      </div>
+      <div class="bottom-icon">
+        <i class="fa-solid fa-fan"></i>
+        <span>Climate</span>
+      </div>
+      <div class="bottom-icon">
+        <i class="fa-solid fa-volume-high"></i>
+        <span>Vol</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-        function updateUI() {
-            totalAmountEl.textContent = formatCurrency(total);
-            targetAmountEl.textContent = formatCurrency(target);
+<script>
+  // MAP INIT (Leaflet)
+  const map = L.map("map", {
+    zoomControl: false,
+  }).setView([21.0278, 105.8342], 13); // Hà Nội demo
 
-            const percent = Math.min((total / target) * 100, 100);
-            progressInnerEl.style.width = percent.toFixed(2) + "%";
-            progressPercentEl.textContent = percent.toFixed(1) + "%";
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap",
+  }).addTo(map);
 
-            const remaining = Math.max(target - total, 0);
-            progressRemainEl.textContent = remaining === 0
-                ? "Đã đủ 1.000.000.000đ"
-                : "Còn thiếu: " + formatCurrency(remaining);
+  // Demo route (polyline)
+  const routeCoords = [
+    [21.0278, 105.8342],
+    [21.023, 105.84],
+    [21.018, 105.845],
+    [21.015, 105.855],
+  ];
 
-            if (total >= target && !isCompleted) {
-                isCompleted = true;
-                saveState();
-            }
+  const route = L.polyline(routeCoords, {
+    color: "#19d4ff",
+    weight: 5,
+    opacity: 0.9,
+  }).addTo(map);
 
-            if (isCompleted || total >= target) {
-                completeBadgeEl.style.display = "block";
-                donateFormEl.classList.add("disabled"); // giờ chỉ mờ thôi, vẫn ấn được nút
-                if (toastInterval) {
-                    clearInterval(toastInterval);
-                    toastInterval = null;
-                }
-            } else {
-                completeBadgeEl.style.display = "none";
-                donateFormEl.classList.remove("disabled");
-            }
-        }
+  const carMarker = L.circleMarker(routeCoords[0], {
+    radius: 7,
+    color: "#19d4ff",
+    fillColor: "#19d4ff",
+    fillOpacity: 1,
+  }).addTo(map);
 
-        function addToTotal(value) {
-            if (isCompleted) return;
-            total += value;
-            if (total >= target) {
-                total = target;
-            }
-            saveState();
-            updateUI();
-        }
+  map.fitBounds(route.getBounds(), { padding: [30, 30] });
 
-        function handleAddAmount() {
-            const raw = inputAmountEl.value.trim();
+  // Simple animation car moves along the route
+  let idx = 0;
+  setInterval(() => {
+    idx = (idx + 1) % routeCoords.length;
+    carMarker.setLatLng(routeCoords[idx]);
+  }, 1500);
 
-            // Không nhập số -> reset
-            if (!raw) {
-                const ok = confirm("Bạn muốn RESET toàn bộ dữ liệu donate (về 0đ)?");
-                if (ok) {
-                    resetState();
-                }
-                return;
-            }
+  // TOGGLE 2D / 3D CAR VIEW
+  const btn2d = document.getElementById("btn-2d");
+  const btn3d = document.getElementById("btn-3d");
+  const car2d = document.getElementById("car2d");
+  const car3d = document.getElementById("car3d");
 
-            const value = Number(raw);
-            if (isNaN(value) || value <= 0) {
-                alert("Vui lòng nhập số tiền hợp lệ (> 0).");
-                return;
-            }
+  btn2d.addEventListener("click", () => {
+    btn2d.classList.add("active");
+    btn3d.classList.remove("active");
+    car2d.style.display = "block";
+    car3d.style.display = "none";
+  });
 
-            addToTotal(value);
-            inputAmountEl.value = "";
-        }
-
-        const NAMES = [
-            "Nguyễn Minh A",
-            "Trần Thị B",
-            "Lê Văn C",
-            "Phạm Đức D",
-            "Hoàng Mai",
-            "Vũ Khánh",
-            "Đinh Tuấn",
-            "Bùi Lan",
-            "Phan Huy",
-            "Đoàn Anh"
-        ];
-
-        const FAKE_AMOUNTS = [
-            100_000,
-            200_000,
-            1_000_000
-        ];
-
-        function randomItem(arr) {
-            return arr[Math.floor(Math.random() * arr.length)];
-        }
-
-        function showFakeToast() {
-            if (isCompleted || total >= target) return;
-
-            const name = randomItem(NAMES);
-            const amount = randomItem(FAKE_AMOUNTS);
-
-            addToTotal(amount);
-
-            const toast = document.createElement("div");
-            toast.className = "toast";
-
-            const emoji = document.createElement("div");
-            emoji.textContent = "✅";
-
-            const text = document.createElement("div");
-
-            const nameSpan = document.createElement("span");
-            nameSpan.className = "toast-name";
-            nameSpan.textContent = name + " ";
-
-            const msgSpan = document.createElement("span");
-            msgSpan.textContent = "vừa chuyển ";
-
-            const amountSpan = document.createElement("span");
-            amountSpan.className = "toast-amount";
-            amountSpan.textContent = formatCurrency(amount);
-
-            text.appendChild(nameSpan);
-            text.appendChild(msgSpan);
-            text.appendChild(amountSpan);
-
-            toast.appendChild(emoji);
-            toast.appendChild(text);
-
-            toastContainerEl.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-
-        function initFakeToasts() {
-            if (isCompleted || total >= target) return;
-            toastInterval = setInterval(showFakeToast, 3000);
-        }
-
-        toggleBankEl.addEventListener("click", () => {
-            const isShown = bankInfoEl.style.display === "block";
-            bankInfoEl.style.display = isShown ? "none" : "block";
-        });
-
-        addButtonEl.addEventListener("click", handleAddAmount);
-        inputAmountEl.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                handleAddAmount();
-            }
-        });
-
-        loadState();
-        updateUI();
-        initFakeToasts();
-    </script>
+  btn3d.addEventListener("click", () => {
+    btn3d.classList.add("active");
+    btn2d.classList.remove("active");
+    car2d.style.display = "none";
+    car3d.style.display = "block";
+  });
+</script>
 </body>
 </html>
