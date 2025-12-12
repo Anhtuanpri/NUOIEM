@@ -2,16 +2,17 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <title>VF3 Dashboard - Ratio Fixed</title>
+  <title>VF3 Dashboard - Ratio Fixed (Full)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
-  <!-- Icons -->
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer"/>
 
+  <!-- apps config -->
   <script src="apps.js" defer></script>
 
   <style>
@@ -26,30 +27,46 @@
 
     html,body{height:100%; margin:0; background:var(--bg); font-family:var(--font-main); color:var(--text-main); overflow:hidden;}
 
-    /* frame that contains dashboard root */
-    #frame{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); overflow:hidden;}
+    /* FRAME that centers the dashboard canvas */
+    #frame { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:var(--bg); overflow:hidden; }
 
-    /* design canvas: 1440 x 810 (16:9) */
-    .root{width:1440px; height:810px; box-sizing:border-box; padding:14px 22px; display:flex; flex-direction:column; gap:10px; transform-origin: top left; background:transparent;}
+    /* Design canvas (16:9) */
+    .root {
+      width: 1440px;
+      height: 810px;
+      box-sizing: border-box;
+      padding: 14px 22px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
 
-    /* small mode toggle in top-right of frame (not part of dashboard) */
-    #modeToggleWrap{ position: fixed; top: 8px; right: 12px; z-index: 9999; display:flex; gap:8px; align-items:center; }
-    #modeToggle { background: rgba(0,0,0,0.35); color:#fff; border:1px solid rgba(255,255,255,0.06); padding:6px 10px; border-radius:10px; cursor:pointer; font-size:13px; }
-    #modeLabel { color: #cfeeff; font-size:12px; background:transparent; padding:6px 8px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); }
+      /* CENTER by absolute + translate(-50%,-50%) */
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: center center;
+      transform: translate(-50%, -50%) scale(1); /* updated by JS */
+      background: transparent;
+    }
+
+    /* Mode toggle top-right (outside canvas) */
+    #modeToggleWrap { position: fixed; top: 10px; right: 12px; z-index: 9999; display:flex; gap:8px; align-items:center; }
+    #modeLabel { color:#cfeeff; font-size:12px; background:rgba(0,0,0,0.25); padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); }
+    #modeToggle { background: rgba(0,0,0,0.45); color:#fff; padding:6px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); cursor:pointer; }
 
     /* top bar */
     .top-bar{display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--text-sub);}
     .top-bar-left span:first-child{color:var(--text-main); font-weight:600; margin-right:8px;}
     .top-bar-right{display:flex; gap:14px; align-items:center;}
 
-    /* main grid 3 columns */
+    /* main 3 columns */
     .main{flex:1 1 auto; display:grid; grid-template-columns:1.08fr 2.06fr 1.06fr; gap:12px; min-height:0; align-items:stretch;}
 
     .panel{background:var(--card-bg); border-radius:var(--radius-big); box-shadow:var(--shadow); padding:14px 16px; position:relative; overflow:hidden; display:flex; flex-direction:column; min-height:0; height:100%;}
     .panel::before{ content:""; position:absolute; inset:-40%; background:radial-gradient(circle at 0 0,var(--accent-soft),transparent 60%); opacity:0.7; pointer-events:none;}
     .panel>*{position:relative; z-index:1;}
 
-    /* left car */
+    /* LEFT (car) */
     .left-top-stats{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:13px; flex:0 0 auto;}
     .battery-chip{display:flex; align-items:center; gap:10px; padding:6px 11px; border-radius:999px; background:linear-gradient(135deg,#20345b,#111a30);}
     .battery-icon{width:32px; height:15px; border-radius:4px; border:2px solid var(--accent); position:relative;}
@@ -79,7 +96,7 @@
     .speed-number{font-size:28px; font-weight:700;}
     .quick-controls{background:#111a30; border-radius:var(--radius-mid); padding:10px; border:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center;}
 
-    /* center */
+    /* CENTER */
     .center-top{display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:12px; color:var(--text-sub); flex:0 0 auto;}
     .search-box{flex:1; border-radius:999px; background:var(--glass); border:1px solid var(--border-soft); padding:7px 12px; display:flex; align-items:center; gap:8px;}
     .search-box input{flex:1; background:transparent; border:none; outline:none; color:var(--text-main); font-size:12px;}
@@ -97,7 +114,7 @@
     .circle-btn{width:34px; height:34px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:linear-gradient(circle at top,var(--accent),var(--accent-2)); color:#020614; box-shadow:0 0 16px var(--accent-soft);}
     .circle-btn.small{width:26px; height:26px; background:#161f37; color:var(--text-sub); box-shadow:none;}
 
-    /* right */
+    /* RIGHT */
     .climate-tabs{display:flex; gap:8px; font-size:12px; margin-bottom:4px; flex:0 0 auto;}
     .climate-tabs button{flex:1; border-radius:999px; padding:6px 0; border:1px solid var(--border-soft); background:#111a30; color:var(--text-sub); cursor:pointer;}
     .climate-tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent-2)); color:#020713; font-weight:600;}
@@ -112,6 +129,7 @@
     .pill-btn{border-radius:999px; padding:4px 10px; border:1px solid var(--border-soft); background:transparent; color:var(--text-sub); font-size:11px; cursor:pointer;}
     .pill-btn.primary{border-color:var(--accent); color:var(--accent);}
 
+    /* bottom nav */
     .bottom-nav{margin-top:6px; border-radius:999px; padding:7px 16px; background:var(--glass); border:1px solid var(--border-soft); display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-sub); flex:0 0 auto;}
     .bottom-nav-left,.bottom-nav-right{display:flex; align-items:center; gap:18px;}
     .bottom-icon{display:flex; flex-direction:column; align-items:center; gap:2px; opacity:0.75; cursor:pointer; min-width:40px;}
@@ -119,28 +137,28 @@
     .bottom-icon i{font-size:15px;}
     .bottom-center{color:var(--text-main); font-size:13px;}
 
-    /* helper */
-    * { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
+    /* helpers */
+    * { -webkit-user-select:none; -ms-user-select:none; user-select:none; }
   </style>
 </head>
 <body>
-  <!-- toggle / label for scale mode -->
+  <!-- Mode toggle UI (outside canvas) -->
   <div id="modeToggleWrap">
-    <div id="modeLabel">Mode: <strong id="modeText">CONTAIN</strong></div>
-    <button id="modeToggle">Switch to Cover</button>
+    <div id="modeLabel">Mode: <strong id="modeText">COVER</strong></div>
+    <button id="modeToggle">Switch to Contain</button>
   </div>
 
   <div id="frame">
     <div class="root" id="dashboardRoot">
-      <!-- TOP -->
+      <!-- top bar -->
       <div class="top-bar">
         <div class="top-bar-left"><span>Saturn OS</span><span>Saturn 1 · Oct 2</span></div>
         <div class="top-bar-right"><span id="timeText">10:30 PM</span><i class="fa-solid fa-signal"></i><i class="fa-solid fa-wifi"></i><i class="fa-solid fa-battery-three-quarters"></i></div>
       </div>
 
-      <!-- MAIN 3 COLUMNS -->
+      <!-- main -->
       <div class="main">
-        <!-- LEFT: CAR -->
+        <!-- LEFT -->
         <div class="panel">
           <div class="left-top-stats">
             <div class="battery-chip"><div class="battery-icon"></div><div><div style="font-size:11px;color:var(--text-sub)">Battery</div><div class="battery-chip-main" id="batteryPct">88.5%</div></div></div>
@@ -162,6 +180,7 @@
                 <div class="light front"></div>
                 <div class="light rear"></div>
 
+                <!-- place your xe.jpg (top-view) here -->
                 <img src="xe.jpg" alt="VF3 top view" class="car2d-img" id="car2dImg" />
               </div>
 
@@ -183,7 +202,7 @@
           </div>
         </div>
 
-        <!-- CENTER: MAP -->
+        <!-- CENTER -->
         <div class="panel">
           <div class="center-top"><div class="search-box" id="searchBox"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="Search destination"/><i class="fa-solid fa-microphone"></i></div></div>
 
@@ -202,7 +221,7 @@
           </div>
         </div>
 
-        <!-- RIGHT: CLIMATE -->
+        <!-- RIGHT -->
         <div class="panel">
           <div class="climate-tabs"><button class="active">Climate</button><button>Settings</button></div>
 
@@ -248,7 +267,7 @@
     btn2d.addEventListener('click', ()=>{ btn2d.classList.add('active'); btn3d.classList.remove('active'); car2d.style.display='block'; car3d.style.display='none'; });
     btn3d.addEventListener('click', ()=>{ btn3d.classList.add('active'); btn2d.classList.remove('active'); car2d.style.display='none'; car3d.style.display='block'; });
 
-    /* ---------- apps rendering ---------- */
+    /* ---------- apps rendering (uses apps.js) ---------- */
     function createAppIcon(app, active){
       const div = document.createElement('div');
       div.className = 'bottom-icon' + (active ? ' active' : '');
@@ -272,67 +291,45 @@
       right.forEach(app=> navRight.appendChild(createAppIcon(app,false)));
     })();
 
-    /* ---------- SCALE: contain / cover toggle ---------- */
-    // default mode: contain (no crop, preserves full canvas)
-    let mode = 'contain'; // 'contain' or 'cover'
+    /* ---------- SCALE (contain / cover) ---------- */
+    // default cover (fills screen). switch to 'contain' to show whole canvas without crop.
+    let mode = 'cover'; // 'cover' or 'contain'
     const modeText = document.getElementById('modeText');
     const modeToggle = document.getElementById('modeToggle');
-
-    function updateModeUI(){
-      modeText.textContent = mode.toUpperCase();
-      modeToggle.textContent = mode === 'contain' ? 'Switch to Cover' : 'Switch to Contain';
-    }
+    function updateModeUI(){ modeText.textContent = mode.toUpperCase(); modeToggle.textContent = mode === 'contain' ? 'Switch to Cover' : 'Switch to Contain'; }
     updateModeUI();
-
-    modeToggle.addEventListener('click', ()=>{
-      mode = mode === 'contain' ? 'cover' : 'contain';
-      updateModeUI();
-      resizeDashboard();
-    });
+    modeToggle.addEventListener('click', ()=> { mode = (mode === 'contain') ? 'cover' : 'contain'; updateModeUI(); resizeDashboard(); });
 
     function resizeDashboard(){
       const designW = 1440, designH = 810;
-      const root = document.getElementById('dashboardRoot');
-      const frame = document.getElementById('frame');
+      const root = document.getElementById('dashboardRoot'), frame = document.getElementById('frame');
       if(!root || !frame) return;
-
       const w = window.innerWidth, h = window.innerHeight;
-      const scaleX = w / designW;
-      const scaleY = h / designH;
-
-      // preserve aspect ratio: uniform scale
+      const scaleX = w / designW, scaleY = h / designH;
       const scale = (mode === 'contain') ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
 
-      // compute new size in px, then center
-      const newW = designW * scale;
-      const newH = designH * scale;
-      const offsetX = (w - newW) / 2;
-      const offsetY = (h - newH) / 2;
-
-      // set transform: translate (in CSS px) BEFORE scaling => divide by scale
-      root.style.transformOrigin = 'top left';
-      root.style.transform = `translate(${offsetX / scale}px, ${offsetY / scale}px) scale(${scale})`;
-
-      // ensure hidden overflow
+      // root is centered by translate(-50%,-50%), so only scale is needed
+      root.style.transformOrigin = 'center center';
+      root.style.transform = `translate(-50%, -50%) scale(${scale})`;
       frame.style.overflow = 'hidden';
 
-      // map repaint after slight delay
-      setTimeout(()=>{ if(window.map && typeof window.map.invalidateSize === 'function') map.invalidateSize(); }, 180);
+      // repaint leaflet
+      setTimeout(()=>{ if(window.map && typeof window.map.invalidateSize === 'function') map.invalidateSize(); }, 200);
     }
 
     window.addEventListener('resize', resizeDashboard);
-    window.addEventListener('orientationchange', ()=> setTimeout(resizeDashboard, 140));
+    window.addEventListener('orientationchange', ()=> setTimeout(resizeDashboard, 120));
+    // initial
     resizeDashboard();
 
-    /* ---------- small UI helpers ---------- */
-    function updateTime(){ const el = document.getElementById('timeText'); const d=new Date(); const hh = d.getHours(); const h = hh%12 || 12; const m = String(d.getMinutes()).padStart(2,'0'); const am = hh<12 ? 'AM' : 'PM'; el.textContent = `${h}:${m} ${am}`; }
+    /* ---------- misc UI ---------- */
+    function updateTime(){ const el=document.getElementById('timeText'); const d=new Date(); const hh=d.getHours(); const h=hh%12||12; const m=String(d.getMinutes()).padStart(2,'0'); const am=hh<12?'AM':'PM'; el.textContent=`${h}:${m} ${am}`; }
     updateTime(); setInterval(updateTime,60000);
 
-    const playBtn = document.getElementById('playBtn'); let isPlaying=false;
-    playBtn.addEventListener('click', ()=>{ isPlaying = !isPlaying; playBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>'; });
+    const playBtn = document.getElementById('playBtn'); let isPlaying=false; playBtn.addEventListener('click', ()=>{ isPlaying = !isPlaying; playBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>'; });
 
-    // ensure initial state of searchbox visible (drive)
-    document.getElementById('searchBox').style.display = 'flex';
+    // ensure searchbox visible on start
+    const sb = document.getElementById('searchBox'); if(sb) sb.style.display = 'flex';
   </script>
 </body>
 </html>
