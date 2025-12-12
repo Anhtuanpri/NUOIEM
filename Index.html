@@ -2,10 +2,10 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>VF3 Car Dashboard</title>
+  <title>VF3 Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet map -->
+  <!-- Leaflet -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -18,7 +18,7 @@
     crossorigin=""
   ></script>
 
-  <!-- Icon (optional) -->
+  <!-- Icons -->
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
@@ -26,37 +26,86 @@
   />
 
   <style>
-    :root {
-      --bg: #020916;
-      --bg-panel: #050f1f;
-      --bg-panel-soft: #071222;
-      --accent: #19d4ff;
-      --accent-soft: #19d4ff33;
-      --text-main: #f4f8ff;
-      --text-sub: #7d8ba4;
-      --danger: #ff4b6a;
-      --success: #3cff9b;
-      --radius-xl: 22px;
-      --radius-lg: 18px;
-    }
+    /* =========================
+       THEME VARIABLES
+       ========================= */
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+    :root {
+      --radius-big: 26px;
+      --radius-mid: 18px;
+      --radius-small: 12px;
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     body {
-      background: radial-gradient(circle at top, #071932 0, #020714 40%, #000 100%);
-      color: var(--text-main);
+      margin: 0;
+      font-family: var(--font-main);
       overflow: hidden;
+    }
+
+    /* --- Theme A: replica ảnh --- */
+    body.theme-a {
+      --bg: #020714;
+      --bg-alt: #050c18;
+      --bg-soft: #081527;
+      --card-bg: linear-gradient(145deg, #050c18, #020714);
+      --accent: #1fe5ff;
+      --accent-soft: #1fe5ff33;
+      --accent-2: #4cf7b0;
+      --danger: #ff4b6a;
+      --text-main: #f7fbff;
+      --text-sub: #7f8ba4;
+      --shadow: 0 0 32px #000000dd;
+      --glass: rgba(6, 19, 40, 0.82);
+      --border-soft: #1a263b;
+    }
+
+    /* --- Theme B: luxury neon / glass --- */
+    body.theme-b {
+      --bg: radial-gradient(circle at top left, #141a33 0, #030415 45%, #000 100%);
+      --bg-alt: rgba(8, 24, 60, 0.75);
+      --bg-soft: rgba(6, 18, 48, 0.6);
+      --card-bg: radial-gradient(circle at top, #101633 0, #050716 65%);
+      --accent: #35f3ff;
+      --accent-soft: #35f3ff44;
+      --accent-2: #ff73f5;
+      --danger: #ff4b6a;
+      --text-main: #fdfdff;
+      --text-sub: #8f9bc7;
+      --shadow: 0 0 40px #000000f0, 0 0 40px #2bffff30;
+      --glass: rgba(4, 10, 30, 0.75);
+      --border-soft: #273054;
+    }
+
+    /* --- Theme C: minimal Tesla style --- */
+    body.theme-c {
+      --bg: #05070d;
+      --bg-alt: #0a0d15;
+      --bg-soft: #0c111b;
+      --card-bg: #0b0f19;
+      --accent: #42c8ff;
+      --accent-soft: #42c8ff33;
+      --accent-2: #22e39a;
+      --danger: #ff4b5e;
+      --text-main: #f5f7fd;
+      --text-sub: #9ca6c3;
+      --shadow: 0 0 26px #000000dd;
+      --glass: rgba(11, 15, 25, 0.98);
+      --border-soft: #181e2e;
+    }
+
+    /* =========================
+       LAYOUT + COMMON STYLES
+       ========================= */
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
     }
 
     .root {
       height: 100vh;
-      padding: 16px 20px;
+      padding: 14px 20px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -66,13 +115,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-size: 13px;
       color: var(--text-sub);
-      font-size: 14px;
     }
 
     .top-bar-left span:first-child {
       color: var(--text-main);
       font-weight: 600;
+      margin-right: 8px;
     }
 
     .top-bar-right {
@@ -82,164 +132,189 @@
     }
 
     .top-bar-right i {
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .main {
       flex: 1;
       display: grid;
-      grid-template-columns: 1.2fr 2.1fr 1.3fr;
+      grid-template-columns: 1.1fr 2.1fr 1.2fr;
       gap: 12px;
+      min-height: 0;
     }
 
     .panel {
-      background: linear-gradient(145deg, #050c18, #020714);
-      border-radius: 28px;
-      box-shadow: 0 0 25px #000000aa;
-      padding: 16px 18px;
+      background: var(--card-bg);
+      border-radius: var(--radius-big);
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
       position: relative;
       overflow: hidden;
-    }
-
-    /* LEFT PANEL – CAR STATUS */
-    .left-panel {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      min-height: 0;
     }
 
-    .battery-row {
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 0 0, var(--accent-soft), transparent 55%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* =========================
+       LEFT PANEL (CAR)
+       ========================= */
+
+    .left-top-stats {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 14px;
+      gap: 10px;
+      font-size: 13px;
     }
 
-    .battery-row .battery-box {
+    .battery-chip {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 6px 10px;
       border-radius: 999px;
-      background: radial-gradient(circle at left, #19d4ff33 0, transparent 70%);
+      background: linear-gradient(135deg, var(--bg-soft), transparent);
     }
 
-    .battery-bar {
-      width: 28px;
-      height: 14px;
+    .battery-icon {
+      width: 30px;
+      height: 15px;
       border-radius: 4px;
       border: 2px solid var(--accent);
       position: relative;
     }
 
-    .battery-bar::after {
+    .battery-icon::after {
       content: "";
       position: absolute;
       inset: 2px;
       border-radius: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--success));
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
     }
 
-    .stat-chips {
+    .battery-icon::before {
+      content: "";
+      position: absolute;
+      right: -4px;
+      top: 50%;
+      width: 4px;
+      height: 6px;
+      transform: translateY(-50%);
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    .battery-chip-main {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .quick-stats {
       display: flex;
       gap: 8px;
-      font-size: 13px;
+      font-size: 12px;
     }
 
-    .chip {
-      padding: 4px 10px;
+    .pill {
+      padding: 4px 8px;
       border-radius: 999px;
-      background: #070f1f;
+      background: var(--bg-alt);
       color: var(--text-sub);
-      border: 1px solid #1a263b;
+      border: 1px solid var(--border-soft);
+      white-space: nowrap;
     }
 
-    .chip strong {
+    .pill strong {
       color: var(--accent);
     }
 
     .car-viewport-wrapper {
       flex: 1;
-      margin-top: 4px;
+      margin-top: 10px;
       border-radius: 24px;
-      background: radial-gradient(circle at top, #12345a 0, #020814 60%);
-      position: relative;
-      overflow: hidden;
-      padding: 12px;
+      background: var(--bg-soft);
+      padding: 10px 10px 12px;
       display: flex;
       flex-direction: column;
+      gap: 6px;
     }
 
     .car-viewport-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-sub);
     }
 
+    .car-viewport-header span.title {
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
     .toggle-2d3d {
-      border-radius: 999px;
-      padding: 2px;
-      background: #050c18;
       display: inline-flex;
+      padding: 2px;
+      border-radius: 999px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border-soft);
       gap: 2px;
     }
 
     .toggle-2d3d button {
       border: none;
       outline: none;
-      padding: 4px 10px;
-      font-size: 12px;
+      font-size: 11px;
+      padding: 4px 9px;
       border-radius: 999px;
-      background: transparent;
       color: var(--text-sub);
+      background: transparent;
       cursor: pointer;
     }
 
     .toggle-2d3d button.active {
-      background: linear-gradient(135deg, #18b6ff, #74ffcf);
-      color: #020714;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #020611;
       font-weight: 600;
     }
 
     .car-viewport {
       flex: 1;
-      margin-top: 8px;
+      margin-top: 6px;
       border-radius: 20px;
       overflow: hidden;
       position: relative;
-      background: radial-gradient(circle at top, #1c3355 0, #020714 60%);
+      background: radial-gradient(circle at top, #203a61 0, #020615 70%);
     }
 
-    /* 2D CAR */
+    /* 2D car visualization */
     .car-2d {
+      position: relative;
       width: 100%;
       height: 100%;
-      position: relative;
-    }
-
-    .car-2d .car-body {
-      position: absolute;
-      inset: 18% 22%;
-      border-radius: 40px;
-      background: radial-gradient(circle at top, #4f7cff, #1b2438);
-      box-shadow: 0 0 28px #00f2ff55;
     }
 
     .car-2d .lane {
       position: absolute;
-      width: 4px;
       top: 10%;
       bottom: 10%;
+      width: 3px;
       border-radius: 999px;
-      background: linear-gradient(
-        180deg,
-        transparent 0,
-        #15ffb3aa 20%,
-        #15ffb3aa 80%,
-        transparent 100%
-      );
+      background: linear-gradient(180deg, transparent 0, #18ffc099 20%, #18ffc099 80%, transparent 100%);
     }
 
     .car-2d .lane.l-left {
@@ -250,114 +325,208 @@
       right: 10%;
     }
 
+    .car-2d .car-body {
+      position: absolute;
+      inset: 20% 22%;
+      border-radius: 40px;
+      background: radial-gradient(circle at top, #538bff, #192237);
+      box-shadow: 0 0 28px #0ff8ff66;
+    }
+
     .car-2d .light {
       position: absolute;
       width: 70%;
-      height: 26%;
+      height: 24%;
       left: 15%;
       border-radius: 60%;
       filter: blur(12px);
-      opacity: 0.8;
+      opacity: 0.85;
     }
 
-    .car-2d .light.front {
-      top: 4%;
-      background: radial-gradient(circle, #0dffb6, transparent 60%);
+    .car-2d .front {
+      top: 5%;
+      background: radial-gradient(circle, #21ffe0, transparent 60%);
     }
 
-    .car-2d .light.rear {
-      bottom: 4%;
+    .car-2d .rear {
+      bottom: 5%;
       background: radial-gradient(circle, #ff3b6e, transparent 60%);
     }
 
-    /* 3D CAR (Sketchfab iframe) */
+    /* 3D iframe */
     .car-3d {
       width: 100%;
       height: 100%;
       border: none;
     }
 
-    .quick-controls {
+    .left-bottom {
       margin-top: 10px;
-      background: #020815;
-      border-radius: 18px;
-      padding: 10px 12px;
-      font-size: 12px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 8px;
+      font-size: 11px;
       color: var(--text-sub);
+    }
+
+    .speed-block {
+      background: var(--bg-alt);
+      border-radius: var(--radius-mid);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .speed-number {
+      font-size: 26px;
+      font-weight: 600;
+    }
+
+    .speed-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+    }
+
+    .quick-controls {
+      background: var(--bg-alt);
+      border-radius: var(--radius-mid);
+      padding: 8px 10px;
+      border: 1px solid var(--border-soft);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .quick-controls span.title {
-      color: var(--text-main);
+    .quick-controls .title {
+      font-size: 12px;
       font-weight: 500;
-      font-size: 13px;
+      color: var(--text-main);
     }
 
-    /* CENTER PANEL – MAP + MEDIA */
-    .center-panel {
+    .quick-controls .subtitle {
+      font-size: 11px;
+    }
+
+    /* =========================
+       CENTER PANEL (MAP + MEDIA)
+       ========================= */
+
+    .center-top {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
       gap: 10px;
+      font-size: 12px;
+      color: var(--text-sub);
     }
 
     .search-box {
-      background: rgba(4, 14, 30, 0.95);
+      flex: 1;
       border-radius: 999px;
-      padding: 6px 12px;
+      background: var(--glass);
+      border: 1px solid var(--border-soft);
+      padding: 7px 12px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: var(--text-sub);
-      border: 1px solid #1b283b;
     }
 
     .search-box input {
       flex: 1;
-      border: none;
-      outline: none;
       background: transparent;
+      outline: none;
+      border: none;
       color: var(--text-main);
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    .map-wrapper {
+      flex: 1;
+      margin-top: 8px;
+      border-radius: 22px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 30px #000000ee;
+      min-height: 0;
     }
 
     #map {
-      flex: 1;
-      border-radius: 22px;
-      overflow: hidden;
-      margin-top: 4px;
-      box-shadow: 0 0 30px #000000aa;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Map overlay controls (zoom + volume) */
+    .map-overlay-vertical {
+      position: absolute;
+      right: 10px;
+      top: 12%;
+      bottom: 18%;
+      width: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .slider-card {
+      width: 32px;
+      height: 45%;
+      background: var(--glass);
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      pointer-events: auto;
+      padding: 6px 0;
+    }
+
+    .slider-card input[type="range"] {
+      writing-mode: bt-lr; /* IE/Edge */
+      -webkit-appearance: slider-vertical;
+      width: 6px;
+      height: 70px;
+      background: transparent;
+    }
+
+    .slider-card i {
+      font-size: 11px;
+      color: var(--text-sub);
     }
 
     .media-bar {
       margin-top: 10px;
-      background: #020815;
-      border-radius: 18px;
-      padding: 10px 12px;
+      border-radius: var(--radius-mid);
+      background: var(--bg-alt);
+      border: 1px solid var(--border-soft);
+      padding: 8px 10px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
     .media-cover {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: radial-gradient(circle at top, #ff4b85, #3b0a72);
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top, #ff4b8b, #3b0a72);
       overflow: hidden;
     }
 
     .media-info {
       flex: 1;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .media-title {
       font-size: 13px;
       font-weight: 500;
-      margin-bottom: 2px;
     }
 
     .media-artist {
@@ -367,80 +536,78 @@
     .media-progress {
       height: 3px;
       border-radius: 999px;
-      background: #101624;
-      margin-top: 6px;
+      background: #111827;
+      margin-top: 5px;
       overflow: hidden;
     }
 
     .media-progress-inner {
-      width: 35%;
+      width: 42%;
       height: 100%;
-      background: linear-gradient(90deg, #18b6ff, #6dffe3);
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
     }
 
     .media-controls {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
     }
 
     .circle-btn {
       width: 34px;
       height: 34px;
-      border-radius: 999px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: none;
-      cursor: pointer;
-      background: radial-gradient(circle at top, #18b6ff, #0e7ee4);
-      color: #fff;
-      box-shadow: 0 0 16px #18b6ff66;
+      background: radial-gradient(circle at top, var(--accent), var(--accent-2));
+      color: #020614;
+      box-shadow: 0 0 15px var(--accent-soft);
     }
 
     .circle-btn.small {
       width: 26px;
       height: 26px;
-      background: #071120;
-      box-shadow: none;
+      background: var(--bg-soft);
       color: var(--text-sub);
+      box-shadow: none;
     }
 
-    /* RIGHT PANEL – CLIMATE */
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    /* =========================
+       RIGHT PANEL (CLIMATE)
+       ========================= */
 
     .climate-tabs {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       font-size: 12px;
-      color: var(--text-sub);
+      margin-bottom: 4px;
     }
 
     .climate-tabs button {
       flex: 1;
       border-radius: 999px;
       padding: 6px 0;
-      border: none;
-      background: #050c18;
-      color: inherit;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-alt);
+      color: var(--text-sub);
       cursor: pointer;
     }
 
     .climate-tabs button.active {
-      background: linear-gradient(135deg, #18b6ff, #6dffe3);
-      color: #020714;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #020713;
       font-weight: 600;
+      border-color: transparent;
     }
 
     .climate-main {
       flex: 1;
       display: grid;
       grid-template-columns: auto 1fr auto;
-      gap: 8px;
+      gap: 10px;
       align-items: center;
       margin-top: 6px;
     }
@@ -449,34 +616,34 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      font-size: 14px;
-    }
-
-    .temp-col .temp {
-      font-size: 18px;
-      font-weight: 600;
+      gap: 5px;
+      font-size: 13px;
     }
 
     .temp-col button {
-      background: #050c18;
       border-radius: 999px;
       width: 28px;
       height: 28px;
-      border: none;
+      border: 1px solid var(--border-soft);
+      background: var(--bg-alt);
       color: var(--accent);
       cursor: pointer;
     }
 
+    .temp-col .temp {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
     .fan-dial {
-      height: 140px;
+      height: 150px;
       border-radius: 999px;
-      background: radial-gradient(circle at top, #123458, #050b18);
-      position: relative;
+      background: radial-gradient(circle at top, #173255, #050a15);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px #000;
+      position: relative;
+      box-shadow: 0 0 22px #000000dd;
     }
 
     .fan-dial::before {
@@ -485,14 +652,14 @@
       width: 60%;
       height: 60%;
       border-radius: 50%;
-      border: 2px solid #19d4ff55;
-      box-shadow: 0 0 12px #19d4ffaa;
+      border: 2px solid var(--accent-soft);
+      box-shadow: 0 0 14px var(--accent-soft);
     }
 
     .fan-icon {
-      font-size: 26px;
+      font-size: 24px;
       color: var(--accent);
-      animation: spin 5s linear infinite;
+      animation: spin 4s linear infinite;
     }
 
     @keyframes spin {
@@ -500,9 +667,9 @@
       to   { transform: rotate(360deg); }
     }
 
-    .climate-bottom-list {
+    .climate-bottom {
       margin-top: 10px;
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-sub);
     }
 
@@ -510,13 +677,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 4px;
+      padding: 6px 0;
     }
 
     .pill-btn {
       border-radius: 999px;
       padding: 4px 10px;
-      border: 1px solid #1b283b;
+      border: 1px solid var(--border-soft);
       background: transparent;
       color: var(--text-sub);
       font-size: 11px;
@@ -528,17 +695,21 @@
       color: var(--accent);
     }
 
-    /* BOTTOM NAV */
+    /* =========================
+       BOTTOM NAV
+       ========================= */
+
     .bottom-nav {
       margin-top: 4px;
-      background: rgba(2, 9, 22, 0.9);
       border-radius: 999px;
-      padding: 6px 14px;
+      padding: 6px 16px;
+      background: var(--glass);
+      border: 1px solid var(--border-soft);
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
       color: var(--text-sub);
-      font-size: 14px;
     }
 
     .bottom-nav-left,
@@ -552,40 +723,44 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      font-size: 11px;
-      opacity: 0.65;
+      gap: 2px;
+      opacity: 0.7;
       cursor: pointer;
     }
 
     .bottom-icon.active {
-      color: var(--accent);
       opacity: 1;
+      color: var(--accent);
     }
 
     .bottom-icon i {
-      font-size: 15px;
-      margin-bottom: 2px;
+      font-size: 14px;
     }
 
-    .bottom-center-text {
-      font-size: 13px;
+    .bottom-center {
       color: var(--text-main);
+      font-size: 13px;
     }
 
-    @media (max-width: 1024px) {
+    @media (max-width: 1100px) {
       .main {
         grid-template-columns: 1fr;
-        grid-auto-rows: 300px;
+        grid-auto-rows: 320px;
+      }
+      .panel {
+        min-height: 0;
       }
     }
   </style>
 </head>
-<body>
+
+<!-- ĐỔI theme-a / theme-b / theme-c ở đây -->
+<body class="theme-a">
 <div class="root">
   <!-- TOP BAR -->
   <div class="top-bar">
     <div class="top-bar-left">
-      <span>Saturn OS</span> · <span>Saturn 1 · Oct 2</span>
+      <span>Saturn OS</span><span>Saturn 1 · Oct 2</span>
     </div>
     <div class="top-bar-right">
       <span>10:30 PM</span>
@@ -595,34 +770,33 @@
     </div>
   </div>
 
+  <!-- MAIN -->
   <div class="main">
-    <!-- LEFT PANEL -->
-    <div class="panel left-panel">
-      <div class="battery-row">
-        <div class="battery-box">
-          <div class="battery-bar"></div>
+    <!-- LEFT: CAR -->
+    <div class="panel">
+      <div class="left-top-stats">
+        <div class="battery-chip">
+          <div class="battery-icon"></div>
           <div>
-            <div style="font-size:12px; color:var(--text-sub)">Battery</div>
-            <div style="font-size:14px; font-weight:600">88.5%</div>
+            <div style="font-size:11px; color:var(--text-sub)">Battery</div>
+            <div class="battery-chip-main">88.5%</div>
           </div>
         </div>
-        <div class="stat-chips">
-          <div class="chip">Range: <strong>215.3 km</strong></div>
-          <div class="chip">Speed: <strong>20 km/h</strong></div>
+        <div class="quick-stats">
+          <div class="pill">Range: <strong>215.3 km</strong></div>
+          <div class="pill">Speed: <strong>20 km/h</strong></div>
         </div>
       </div>
 
       <div class="car-viewport-wrapper">
         <div class="car-viewport-header">
-          <span style="font-size:13px; color:var(--text-main)">VF3 Status</span>
+          <span class="title">VF3 Status</span>
           <div class="toggle-2d3d">
             <button id="btn-2d" class="active">2D</button>
             <button id="btn-3d">3D</button>
           </div>
         </div>
-
         <div class="car-viewport">
-          <!-- 2D view -->
           <div id="car2d" class="car-2d">
             <div class="lane l-left"></div>
             <div class="lane l-right"></div>
@@ -630,8 +804,6 @@
             <div class="light rear"></div>
             <div class="car-body"></div>
           </div>
-
-          <!-- 3D view (Sketchfab) -->
           <iframe
             id="car3d"
             class="car-3d"
@@ -646,24 +818,46 @@
         </div>
       </div>
 
-      <div class="quick-controls">
-        <div>
-          <span class="title">Quick controls</span><br />
-          <span>Lights · Mirrors · Locks</span>
+      <div class="left-bottom">
+        <div class="speed-block">
+          <div class="speed-label">Current speed</div>
+          <div class="speed-number">30</div>
+          <div style="font-size:11px;color:var(--text-sub)">km/h · City mode</div>
         </div>
-        <i class="fa-solid fa-sliders"></i>
+        <div class="quick-controls">
+          <div>
+            <div class="title">Quick controls</div>
+            <div class="subtitle">Lights · Mirrors · Locks</div>
+          </div>
+          <i class="fa-solid fa-sliders"></i>
+        </div>
       </div>
     </div>
 
-    <!-- CENTER PANEL -->
-    <div class="panel center-panel">
-      <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input placeholder="Search destination" />
-        <i class="fa-solid fa-microphone"></i>
+    <!-- CENTER: MAP + MEDIA -->
+    <div class="panel">
+      <div class="center-top">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input placeholder="Search destination" />
+          <i class="fa-solid fa-microphone"></i>
+        </div>
       </div>
 
-      <div id="map"></div>
+      <div class="map-wrapper">
+        <div id="map"></div>
+        <div class="map-overlay-vertical">
+          <div class="slider-card">
+            <i class="fa-solid fa-plus"></i>
+            <input id="zoomSlider" type="range" min="10" max="18" value="13" />
+            <i class="fa-solid fa-minus"></i>
+          </div>
+          <div class="slider-card">
+            <i class="fa-solid fa-volume-high"></i>
+            <input type="range" min="0" max="100" value="60" />
+          </div>
+        </div>
+      </div>
 
       <div class="media-bar">
         <div class="media-cover"></div>
@@ -688,8 +882,8 @@
       </div>
     </div>
 
-    <!-- RIGHT PANEL -->
-    <div class="panel right-panel">
+    <!-- RIGHT: CLIMATE -->
+    <div class="panel">
       <div class="climate-tabs">
         <button class="active">Climate</button>
         <button>Settings</button>
@@ -698,7 +892,7 @@
       <div class="climate-main">
         <div class="temp-col">
           <button><i class="fa-solid fa-chevron-up"></i></button>
-          <div class="temp" id="temp-left">50°</div>
+          <div class="temp" id="temp-left">22°</div>
           <button><i class="fa-solid fa-chevron-down"></i></button>
         </div>
 
@@ -708,12 +902,12 @@
 
         <div class="temp-col">
           <button><i class="fa-solid fa-chevron-up"></i></button>
-          <div class="temp" id="temp-right">50°</div>
+          <div class="temp" id="temp-right">22°</div>
           <button><i class="fa-solid fa-chevron-down"></i></button>
         </div>
       </div>
 
-      <div class="climate-bottom-list">
+      <div class="climate-bottom">
         <div class="climate-item">
           <span>Battery</span>
           <button class="pill-btn">Details</button>
@@ -746,11 +940,9 @@
         <span>Route</span>
       </div>
     </div>
-
-    <div class="bottom-center-text">
-      2.0 ° · Navigation active
+    <div class="bottom-center">
+      2.0° · Navigation active
     </div>
-
     <div class="bottom-nav-right">
       <div class="bottom-icon">
         <i class="fa-solid fa-seat-airline"></i>
@@ -769,47 +961,50 @@
 </div>
 
 <script>
-  // MAP INIT (Leaflet)
-  const map = L.map("map", {
-    zoomControl: false,
-  }).setView([21.0278, 105.8342], 13); // Hà Nội demo
+  // ===== MAP INIT =====
+  const map = L.map("map", { zoomControl: false }).setView([21.0278, 105.8342], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
-    attribution: "&copy; OpenStreetMap",
+    attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
-  // Demo route (polyline)
   const routeCoords = [
     [21.0278, 105.8342],
-    [21.023, 105.84],
-    [21.018, 105.845],
-    [21.015, 105.855],
+    [21.025, 105.839],
+    [21.021, 105.845],
+    [21.017, 105.852]
   ];
 
   const route = L.polyline(routeCoords, {
     color: "#19d4ff",
     weight: 5,
-    opacity: 0.9,
+    opacity: 0.95
   }).addTo(map);
 
   const carMarker = L.circleMarker(routeCoords[0], {
     radius: 7,
     color: "#19d4ff",
     fillColor: "#19d4ff",
-    fillOpacity: 1,
+    fillOpacity: 1
   }).addTo(map);
 
   map.fitBounds(route.getBounds(), { padding: [30, 30] });
 
-  // Simple animation car moves along the route
+  // car animation
   let idx = 0;
   setInterval(() => {
     idx = (idx + 1) % routeCoords.length;
     carMarker.setLatLng(routeCoords[idx]);
   }, 1500);
 
-  // TOGGLE 2D / 3D CAR VIEW
+  // zoom slider control
+  const zoomSlider = document.getElementById("zoomSlider");
+  zoomSlider.addEventListener("input", () => {
+    map.setZoom(parseInt(zoomSlider.value, 10));
+  });
+
+  // ===== TOGGLE 2D / 3D CAR =====
   const btn2d = document.getElementById("btn-2d");
   const btn3d = document.getElementById("btn-3d");
   const car2d = document.getElementById("car2d");
