@@ -1,10 +1,50 @@
 <!DOCTYPE html>
-<html>
-<body>
-<button id="b">Test Firebase</button>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Cờ vua Online</title>
+
+<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/www/css/chessboard.css">
+
+<!-- 🔥 jQuery – BẮT BUỘC -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
+<script src="https://unpkg.com/chessboardjs@1.0.0/www/js/chessboard.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{
+  background:#0f172a;
+  color:white;
+  font-family:Arial;
+  text-align:center;
+}
+#board{width:320px;margin:20px auto;}
+input,button{
+  padding:8px;
+  margin:5px;
+  border:none;
+  border-radius:6px;
+}
+button{background:#2563eb;color:white;}
+</style>
+</head>
+
+<body>
+
+<h2>♟️ Cờ vua Online</h2>
+
+<input id="room" placeholder="Mã phòng"><br>
+<button onclick="createRoom()">Tạo phòng</button>
+<button onclick="joinRoom()">Vào phòng</button>
+
+<div id="info"></div>
+<div id="board"></div>
+
+<button onclick="resetGame()">Reset (Host)</button>
 
 <script>
 firebase.initializeApp({
@@ -12,14 +52,63 @@ firebase.initializeApp({
   databaseURL: "https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "noitu-7dca6"
 });
-
 const db = firebase.database();
 
-document.getElementById("b").onclick = ()=>{
-  db.ref("netlify_test").set(Date.now())
-  .then(()=>alert("✅ GHI ĐƯỢC"))
-  .catch(e=>alert("❌ LỖI: "+e.message));
+let game = new Chess();
+let board;
+let roomId="", myColor="", isHost=false;
+
+window.onload = ()=>{
+  board = Chessboard('board',{
+    draggable:true,
+    position:'start',
+    onDrop:onDrop
+  });
 };
+
+function createRoom(){
+  roomId = Math.random().toString(36).substring(2,7);
+  document.getElementById("room").value = roomId;
+  myColor="w"; isHost=true;
+
+  db.ref("rooms/"+roomId).set({
+    fen:game.fen()
+  });
+  listen(); info();
+}
+
+function joinRoom(){
+  roomId = document.getElementById("room").value.trim();
+  myColor="b";
+  listen(); info();
+}
+
+function info(){
+  document.getElementById("info").innerText =
+    `Phòng: ${roomId} | Bạn: ${myColor==="w"?"Trắng":"Đen"}`;
+}
+
+function listen(){
+  db.ref("rooms/"+roomId).on("value",snap=>{
+    if(!snap.val()) return;
+    game.load(snap.val().fen);
+    board.position(game.fen());
+  });
+}
+
+function onDrop(from,to){
+  if(game.turn()!==myColor) return "snapback";
+  const move = game.move({from,to,promotion:'q'});
+  if(!move) return "snapback";
+  db.ref("rooms/"+roomId).update({fen:game.fen()});
+}
+
+function resetGame(){
+  if(!isHost) return alert("Chỉ host reset");
+  game.reset();
+  db.ref("rooms/"+roomId).set({fen:game.fen()});
+}
 </script>
+
 </body>
 </html>
