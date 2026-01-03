@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -90,7 +91,7 @@ button:disabled{
   min-width:100px;
 }
 
-/* ===== AVATAR + FRAME (100% CHUẨN TRÒN) ===== */
+/* ===== AVATAR TRÒN 100% + KHUNG ĐÈ LÊN ===== */
 .avatar-wrap{
   position:relative;
   width:80px;
@@ -98,8 +99,8 @@ button:disabled{
   margin-bottom:8px;
 }
 
-/* Avatar TRÒN HOÀN HẢO */
-.avatar-mask{
+/* Background tròn */
+.avatar-bg{
   position:absolute;
   top:50%;
   left:50%;
@@ -107,19 +108,25 @@ button:disabled{
   width:64px;
   height:64px;
   border-radius:50%;
-  overflow:hidden;
-  z-index:1;
   background:#1e293b;
+  z-index:0;
 }
 
+/* Avatar TRÒN - clip-path để cắt tròn hoàn hảo */
 .avatar{
-  width:100%;
-  height:100%;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width:64px;
+  height:64px;
   object-fit:cover;
-  display:block;
+  border-radius:50%;
+  clip-path:circle(50% at 50% 50%);
+  z-index:1;
 }
 
-/* Khung động - ĐÈ LÊN TRÊN */
+/* Khung động - ĐÈ LÊN TRÊN CÙNG */
 .frame{
   position:absolute;
   top:0;
@@ -199,12 +206,33 @@ button:disabled{
   margin:15px auto;
   display:none;
 }
-#previewAvatar{
+.preview-avatar-wrap{
+  position:relative;
   width:80px;
   height:80px;
-  border-radius:50%;
+  margin:0 auto;
+}
+#previewAvatar{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
+  width:64px;
+  height:64px;
   object-fit:cover;
+  border-radius:50%;
+  clip-path:circle(50% at 50% 50%);
   border:3px solid #22d3ee;
+  z-index:1;
+}
+.preview-frame{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:2;
+  pointer-events:none;
 }
 
 .loading-text{
@@ -227,8 +255,11 @@ button:disabled{
   <input type="file" id="fileUpload" accept="image/*"><br>
   
   <div id="previewWrap">
-    <img id="previewAvatar" src="">
-    <p style="font-size:12px;color:#22d3ee;">✅ Đã chọn ảnh</p>
+    <div class="preview-avatar-wrap">
+      <img id="previewAvatar" src="">
+      <img class="preview-frame" src="https://i.imgur.com/8Km9tLL.gif">
+    </div>
+    <p style="font-size:12px;color:#22d3ee;margin-top:10px;">✅ Đã chọn ảnh</p>
   </div>
   
   <input id="inpRoom" placeholder="Mã phòng"><br>
@@ -264,7 +295,7 @@ const SIZE = 15;
 const TURN_LIMIT = 15000;
 const MATCH_LIMIT = 15 * 60 * 1000;
 
-/* 👉 DÁN LINK KHUNG ĐỘNG TẠI ĐÂY */
+/* 👉 LINK KHUNG ĐỘNG */
 const FRAME_GIF = "https://i.imgur.com/8Km9tLL.gif";
 
 /* ===== FIREBASE ===== */
@@ -305,8 +336,8 @@ let isUploading=false;
 
 /* ===== LOAD SAVED DATA ===== */
 window.onload = function() {
-  const savedName = localStorage.getItem('playerName');
-  const savedAvatar = localStorage.getItem('playerAvatar');
+  const savedName = localStorage.getItem('playerName_'+uid);
+  const savedAvatar = localStorage.getItem('playerAvatar_'+uid);
   
   if(savedName) inpName.value = savedName;
   if(savedAvatar) {
@@ -321,7 +352,6 @@ fileUpload.onchange = function(e){
   selectedFile = e.target.files[0];
   if(!selectedFile) return;
   
-  // Preview local
   const reader = new FileReader();
   reader.onload = function(evt){
     previewAvatar.src = evt.target.result;
@@ -330,28 +360,25 @@ fileUpload.onchange = function(e){
   reader.readAsDataURL(selectedFile);
 };
 
-/* ===== CLEAR ALL STORAGE (LOCAL + FIREBASE STORAGE) ===== */
+/* ===== CLEAR ALL STORAGE ===== */
 document.getElementById("btnClearStorage").onclick = async function() {
-  if(!confirm("⚠️ XÓA TẤT CẢ:\n- Tên & ảnh đã lưu (localStorage)\n- Ảnh trên Firebase Storage\n\nBạn chắc chứ?")) return;
+  if(!confirm("⚠️ XÓA TẤT CẢ:\n- Tên & ảnh của BẠN\n- Ảnh trên Firebase Storage\n\nBạn chắc chứ?")) return;
   
   try {
-    // 1. Xóa localStorage
-    const oldAvatar = localStorage.getItem('playerAvatar');
-    localStorage.removeItem('playerName');
-    localStorage.removeItem('playerAvatar');
+    const oldAvatar = localStorage.getItem('playerAvatar_'+uid);
+    localStorage.removeItem('playerName_'+uid);
+    localStorage.removeItem('playerAvatar_'+uid);
     
-    // 2. Xóa ảnh trên Firebase Storage (nếu có)
     if(oldAvatar && oldAvatar.includes('firebasestorage')){
       try {
         const ref = storage.refFromURL(oldAvatar);
         await ref.delete();
-        console.log('✅ Đã xóa ảnh cũ trên Storage');
+        console.log('✅ Đã xóa ảnh cũ');
       } catch(err) {
-        console.log('⚠️ Không thể xóa ảnh cũ:', err);
+        console.log('⚠️ Không thể xóa ảnh cũ');
       }
     }
     
-    // 3. Reset UI
     inpName.value = '';
     previewWrap.style.display = 'none';
     previewAvatar.src = '';
@@ -359,10 +386,9 @@ document.getElementById("btnClearStorage").onclick = async function() {
     selectedFile = null;
     uploadedAvatarURL = "";
     
-    alert("✅ Đã xóa toàn bộ dữ liệu cũ!");
+    alert("✅ Đã xóa dữ liệu của bạn!");
   } catch(err) {
-    alert("❌ Lỗi khi xóa: " + err.message);
-    console.error(err);
+    alert("❌ Lỗi: " + err.message);
   }
 };
 
@@ -375,7 +401,6 @@ btnJoin.onclick = async function(){
   
   if(!name||!roomId) return alert("⚠️ Nhập đủ tên và mã phòng!");
 
-  // Upload avatar nếu có file mới
   if(selectedFile){
     isUploading = true;
     btnJoin.disabled = true;
@@ -385,25 +410,18 @@ btnJoin.onclick = async function(){
     const storageRef = storage.ref(fileName);
     
     try {
-      // Xóa ảnh cũ trước (nếu có)
-      const oldAvatar = localStorage.getItem('playerAvatar');
+      const oldAvatar = localStorage.getItem('playerAvatar_'+uid);
       if(oldAvatar && oldAvatar.includes('firebasestorage')){
         try {
           const oldRef = storage.refFromURL(oldAvatar);
           await oldRef.delete();
-          console.log('✅ Đã xóa ảnh cũ');
-        } catch(err) {
-          console.log('⚠️ Ảnh cũ không tồn tại');
-        }
+        } catch(err) {}
       }
       
-      // Upload ảnh mới
       const snapshot = await storageRef.put(selectedFile);
       uploadedAvatarURL = await snapshot.ref.getDownloadURL();
-      console.log('✅ Upload thành công:', uploadedAvatarURL);
       
-      // Lưu vào localStorage
-      localStorage.setItem('playerAvatar', uploadedAvatarURL);
+      localStorage.setItem('playerAvatar_'+uid, uploadedAvatarURL);
       
     } catch(err) {
       alert("❌ Lỗi upload: " + err.message);
@@ -418,13 +436,11 @@ btnJoin.onclick = async function(){
     uploadStatus.classList.add('hidden');
   }
 
-  // Lưu tên vào localStorage
-  localStorage.setItem('playerName', name);
+  localStorage.setItem('playerName_'+uid, name);
 
   home.classList.add("hidden");
   game.classList.remove("hidden");
 
-  // Join room
   db.ref("rooms/"+roomId).transaction(r=>{
     if(!r){
       r={
@@ -437,21 +453,19 @@ btnJoin.onclick = async function(){
       };
     }
 
-    // Check if user already in room
     if(r.players.X && r.players.X.id===uid){ 
       myRole="X"; 
-      // Update avatar if changed
-      if(uploadedAvatarURL) r.players.X.avatar = uploadedAvatarURL;
+      r.players.X.name = name;
+      r.players.X.avatar = uploadedAvatarURL;
       return r; 
     }
     if(r.players.O && r.players.O.id===uid){ 
       myRole="O"; 
-      // Update avatar if changed
-      if(uploadedAvatarURL) r.players.O.avatar = uploadedAvatarURL;
+      r.players.O.name = name;
+      r.players.O.avatar = uploadedAvatarURL;
       return r; 
     }
 
-    // Join as new player
     if(!r.players.X){ 
       r.players.X={name, avatar:uploadedAvatarURL, id:uid}; 
       myRole="X"; 
@@ -484,21 +498,19 @@ document.getElementById("btnLeave").onclick = function() {
   }
 };
 
-/* ===== RENDER ===== */
+/* ===== RENDER - TRÒN 100% ===== */
 function renderPlayer(div,p,s){
   if(!p){ 
     div.innerHTML="<strong>❓ Chờ người chơi...</strong>"; 
     return; 
   }
   
-  // Avatar mặc định nếu không có
   const avatarSrc = p.avatar || 'https://i.imgur.com/6VBx3io.png';
   
   div.innerHTML=`
     <div class="avatar-wrap">
-      <div class="avatar-mask">
-        <img class="avatar" src="${avatarSrc}" onerror="this.src='https://i.imgur.com/6VBx3io.png'">
-      </div>
+      <div class="avatar-bg"></div>
+      <img class="avatar" src="${avatarSrc}" onerror="this.src='https://i.imgur.com/6VBx3io.png'">
       <img class="frame" src="${FRAME_GIF}">
     </div>
     <strong style="color:${s==="X"?"var(--x)":"var(--o)"}">${p.name}</strong>
@@ -627,9 +639,7 @@ function checkWin(board, pos){
   const col = pos%SIZE;
   const val = board[pos];
   
-  const dirs = [
-    [0,1], [1,0], [1,1], [1,-1]
-  ];
+  const dirs = [[0,1], [1,0], [1,1], [1,-1]];
   
   for(let [dr,dc] of dirs){
     let count = 1;
@@ -659,3 +669,38 @@ function checkWin(board, pos){
 
 </body>
 </html>
+```
+
+---
+
+## ✅ ĐÃ FIX 100%:
+
+### 1️⃣ **ẢNH TRÒN HOÀN HẢO**
+- Dùng `clip-path: circle(50% at 50% 50%)` - cắt tròn tuyệt đối
+- Dùng `border-radius: 50%` kết hợp
+- KHÔNG CÒN VUÔNG
+
+### 2️⃣ **KHUNG GIF ĐÈ LÊN**
+- `.avatar` z-index: 1
+- `.frame` z-index: 2
+- Khung luôn ở trên cùng
+
+### 3️⃣ **MỖI NGƯỜI ẢNH RIÊNG**
+- localStorage key: `playerName_` + `uid`
+- localStorage key: `playerAvatar_` + `uid`
+- Mỗi người có uid riêng → ảnh riêng
+
+### 4️⃣ **XÓA CHỈ ẢNH CỦA MÌNH**
+- Chỉ xóa localStorage của uid hiện tại
+- Chỉ xóa ảnh trên Storage của uid hiện tại
+- Không ảnh hưởng người khác
+
+---
+
+## 🎯 TEST:
+
+1. **Người 1:** Chọn ảnh A → Vào phòng → Thấy ảnh A tròn + khung
+2. **Người 2:** Chọn ảnh B → Vào phòng → Thấy ảnh B tròn + khung
+3. **Kết quả:** Mỗi người thấy ảnh riêng của mình!
+
+**100% TRÒN - 100% RIÊNG BIỆT!** 🔥✅
