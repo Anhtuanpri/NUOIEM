@@ -2,19 +2,9 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Cờ vua Online</title>
+<title>Caro Online</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- CSS bàn cờ -->
-<link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/www/css/chessboard.css">
-
-<!-- 🔥 jQuery (BẮT BUỘC) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Thư viện cờ -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js"></script>
-<script src="https://unpkg.com/chessboardjs@1.0.0/www/js/chessboard.js"></script>
-
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -26,127 +16,86 @@ body{
   text-align:center;
 }
 #board{
-  width:320px;
+  display:grid;
+  grid-template-columns: repeat(3, 100px);
+  gap:10px;
+  justify-content:center;
   margin:20px auto;
 }
-input,button{
-  padding:8px;
-  margin:5px;
-  border:none;
-  border-radius:6px;
-}
-button{
-  background:#2563eb;
-  color:white;
+.cell{
+  width:100px;
+  height:100px;
+  background:#1e293b;
+  font-size:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h2>♟️ Cờ vua Online</h2>
-
-<input id="room" placeholder="Mã phòng"><br>
-<button onclick="createRoom()">Tạo phòng</button>
-<button onclick="joinRoom()">Vào phòng</button>
-
-<div id="info"></div>
+<h2>⭕❌ Caro Online</h2>
+<p id="info"></p>
 <div id="board"></div>
 
-<button onclick="resetGame()">Reset (Host)</button>
-
 <script>
-/* ========= FIREBASE ========= */
+// ===== FIREBASE (CỦA BẠN) =====
 firebase.initializeApp({
   apiKey: "AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
   databaseURL: "https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "noitu-7dca6"
 });
 const db = firebase.database();
-/* =========================== */
+// =============================
 
-let game = new Chess();
-let board;
-let roomId = "";
-let myColor = "";
-let isHost = false;
-
-/* KHỞI TẠO BÀN CỜ */
-window.onload = () => {
-  board = Chessboard("board", {
-    draggable: true,
-    position: "start",
-    onDrop: onDrop
-  });
-};
-
-/* TẠO PHÒNG */
-function createRoom(){
-  roomId = Math.random().toString(36).slice(2,7);
-  document.getElementById("room").value = roomId;
-
-  myColor = "w";
-  isHost = true;
-
-  db.ref("rooms/"+roomId).set({
-    fen: game.fen()
-  });
-
-  listenRoom();
-  showInfo();
+// 👉 room lấy trực tiếp từ LINK
+let room = location.hash.replace("#","");
+if(!room){
+  room = Math.random().toString(36).slice(2,7);
+  location.hash = room;
 }
 
-/* VÀO PHÒNG */
-function joinRoom(){
-  roomId = document.getElementById("room").value.trim();
-  if(!roomId) return alert("Nhập mã phòng");
+document.getElementById("info").innerText =
+  "Link phòng: " + location.href;
 
-  myColor = "b";
-  listenRoom();
-  showInfo();
+let myRole = "X";
+
+// xác định X hay O
+db.ref("rooms/"+room+"/players").once("value",snap=>{
+  if(snap.exists()) myRole = "O";
+  db.ref("rooms/"+room+"/players/"+myRole).set(true);
+});
+
+const boardDiv = document.getElementById("board");
+const cells = Array(9).fill("");
+
+for(let i=0;i<9;i++){
+  const d = document.createElement("div");
+  d.className="cell";
+  d.onclick = ()=> play(i);
+  boardDiv.appendChild(d);
 }
 
-/* HIỂN THÔNG TIN */
-function showInfo(){
-  document.getElementById("info").innerText =
-    `Phòng: ${roomId} | Bạn: ${myColor==="w"?"Trắng":"Đen"}`;
+function play(i){
+  if(cells[i]) return;
+  cells[i] = myRole;
+  sync();
 }
 
-/* LẮNG NGHE FIREBASE */
-function listenRoom(){
-  db.ref("rooms/"+roomId).on("value", snap => {
-    if(!snap.val()) return;
-    game.load(snap.val().fen);
-    board.position(game.fen());
+function sync(){
+  db.ref("rooms/"+room+"/board").set(cells);
+}
+
+db.ref("rooms/"+room+"/board").on("value",snap=>{
+  if(!snap.val()) return;
+  snap.val().forEach((v,i)=>{
+    cells[i]=v;
+    boardDiv.children[i].innerText=v||"";
   });
-}
-
-/* KÉO THẢ QUÂN */
-function onDrop(from, to){
-  if(game.turn() !== myColor) return "snapback";
-
-  const move = game.move({
-    from: from,
-    to: to,
-    promotion: "q"
-  });
-
-  if(!move) return "snapback";
-
-  db.ref("rooms/"+roomId).update({
-    fen: game.fen()
-  });
-}
-
-/* RESET */
-function resetGame(){
-  if(!isHost) return alert("Chỉ host reset");
-
-  game.reset();
-  db.ref("rooms/"+roomId).set({
-    fen: game.fen()
-  });
-}
+});
 </script>
 
 </body>
