@@ -9,36 +9,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body{
-  background:#0f172a;
-  color:white;
-  font-family:Arial;
-  text-align:center;
-}
+body{background:#0f172a;color:white;font-family:Arial;text-align:center}
 .hidden{display:none}
-
-input,select,button{
-  padding:8px;
-  margin:6px;
-  border-radius:6px;
-  border:none;
-}
-
-#board{
-  display:grid;
-  gap:4px;
-  justify-content:center;
-  margin:20px auto;
-}
+input,select,button{padding:8px;margin:6px;border-radius:6px;border:none}
+#board{display:grid;gap:4px;justify-content:center;margin:20px auto}
 .cell{
-  width:28px;
-  height:28px;
-  background:#1e293b;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  font-size:18px;
+  width:28px;height:28px;background:#1e293b;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px
 }
 </style>
 </head>
@@ -47,23 +25,21 @@ input,select,button{
 
 <h2>❌⭕ CỜ CARO ONLINE</h2>
 
-<!-- ===== TRANG CHỦ ===== -->
+<!-- TRANG CHỦ -->
 <div id="home">
   <input id="name" placeholder="Tên kiện tướng"><br>
   <input id="room" placeholder="Mã phòng (vd 1111)"><br>
-
   <select id="size">
-    <option value="3">3 x 3</option>
-    <option value="4">4 x 4</option>
-    <option value="5">5 x 5</option>
-    <option value="6">6 x 6</option>
-    <option value="15" selected>15 x 15</option>
+    <option value="3">3x3</option>
+    <option value="4">4x4</option>
+    <option value="5">5x5</option>
+    <option value="6">6x6</option>
+    <option value="15" selected>15x15</option>
   </select><br>
-
   <button onclick="joinRoom()">Vào phòng</button>
 </div>
 
-<!-- ===== GAME ===== -->
+<!-- GAME -->
 <div id="game" class="hidden">
   <p id="info"></p>
   <p id="turn"></p>
@@ -83,17 +59,32 @@ const db = firebase.database();
 
 const TURN_TIME = 15000;
 
-let roomId,myName,myRole="spectator";
-let SIZE=15, WIN=5;
-let board=[], uid=localStorage.uid||(localStorage.uid=Math.random().toString(36).slice(2));
+// DOM (BẮT BUỘC)
+const nameInput = document.getElementById("name");
+const roomInput = document.getElementById("room");
+const sizeSelect = document.getElementById("size");
+const boardDiv = document.getElementById("board");
+const home = document.getElementById("home");
+const game = document.getElementById("game");
+
+let SIZE = 15;
+let WIN = 5;
+let board = [];
+let roomId = "";
+let myName = "";
+let myRole = "spectator";
+let uid = localStorage.uid || (localStorage.uid = Math.random().toString(36).slice(2));
 
 function joinRoom(){
-  myName = name.value.trim();
-  roomId = room.value.trim();
-  SIZE = parseInt(size.value);
-  WIN = SIZE>=5 ? 5 : SIZE;
+  myName = nameInput.value.trim();
+  roomId = roomInput.value.trim();
+  SIZE = parseInt(sizeSelect.value);
+  WIN = SIZE >= 5 ? 5 : SIZE;
 
-  if(!myName || !roomId) return alert("Nhập đủ tên & mã phòng");
+  if(!myName || !roomId){
+    alert("Nhập tên và mã phòng");
+    return;
+  }
 
   home.classList.add("hidden");
   game.classList.remove("hidden");
@@ -101,25 +92,27 @@ function joinRoom(){
   db.ref("rooms/"+roomId).transaction(r=>{
     if(!r){
       r={
-        size:SIZE,
-        win:WIN,
-        board:Array(SIZE*SIZE).fill(""),
+        size: SIZE,
+        win: WIN,
+        board: Array(SIZE*SIZE).fill(""),
         players:{},
         turn:"X",
-        turnStart:firebase.database.ServerValue.TIMESTAMP
+        turnStart: firebase.database.ServerValue.TIMESTAMP
       };
     }
 
-    SIZE=r.size; WIN=r.win;
+    SIZE = r.size;
+    WIN = r.win;
+    board = r.board;
 
     if(!r.players.X){
-      r.players.X={id:uid,name:myName};
-      myRole="X";
+      r.players.X = {id:uid,name:myName};
+      myRole = "X";
     }else if(!r.players.O){
-      r.players.O={id:uid,name:myName};
-      myRole="O";
+      r.players.O = {id:uid,name:myName};
+      myRole = "O";
     }else{
-      myRole="spectator";
+      myRole = "spectator";
     }
 
     return r;
@@ -129,15 +122,16 @@ function joinRoom(){
 }
 
 function renderBoard(){
-  boardDiv.innerHTML="";
-  boardDiv.style.gridTemplateColumns=`repeat(${SIZE},28px)`;
-  for(let i=0;i<board.length;i++){
+  boardDiv.innerHTML = "";
+  boardDiv.style.gridTemplateColumns = `repeat(${SIZE},28px)`;
+
+  board.forEach((v,i)=>{
     const d=document.createElement("div");
     d.className="cell";
-    d.innerText=board[i]||"";
+    d.innerText=v||"";
     d.onclick=()=>play(i);
     boardDiv.appendChild(d);
-  }
+  });
 }
 
 function listen(){
@@ -145,24 +139,26 @@ function listen(){
     const r=snap.val();
     if(!r) return;
 
-    board=r.board;
+    board = r.board;
     renderBoard();
 
-    info.innerText=`❌ ${r.players.X?.name||"..."}  vs  ⭕ ${r.players.O?.name||"..."}`;
+    document.getElementById("info").innerText =
+      `❌ ${r.players.X?.name||"..."}  vs  ⭕ ${r.players.O?.name||"..."}`;
 
-    if(Date.now()-r.turnStart>TURN_TIME){
+    if(Date.now() - r.turnStart > TURN_TIME){
       db.ref("rooms/"+roomId).update({
-        turn:r.turn==="X"?"O":"X",
-        turnStart:firebase.database.ServerValue.TIMESTAMP
+        turn: r.turn==="X"?"O":"X",
+        turnStart: firebase.database.ServerValue.TIMESTAMP
       });
     }
 
     if(r.winner){
-      status.innerText=`🎉 ${r.winner} THẮNG`;
+      document.getElementById("status").innerText = `🎉 ${r.winner} thắng`;
       return;
     }
 
-    turn.innerText = r.turn===myRole ? "👉 Lượt của bạn (15s)" : "⏳ Đợi đối thủ";
+    document.getElementById("turn").innerText =
+      r.turn===myRole ? "👉 Lượt của bạn (15s)" : "⏳ Đợi đối thủ";
   });
 }
 
@@ -174,31 +170,13 @@ function play(i){
     if(!r || r.turn!==myRole || r.board[i]) return;
 
     r.board[i]=myRole;
-    const win=checkWin(i,myRole,r.board);
 
     db.ref("rooms/"+roomId).update({
       board:r.board,
-      turn:myRole==="X"?"O":"X",
-      turnStart:firebase.database.ServerValue.TIMESTAMP,
-      winner:win?myRole:null
+      turn: myRole==="X"?"O":"X",
+      turnStart: firebase.database.ServerValue.TIMESTAMP
     });
   });
-}
-
-function checkWin(p,v,b){
-  const r=Math.floor(p/SIZE),c=p%SIZE;
-  const dirs=[[1,0],[0,1],[1,1],[1,-1]];
-  for(let[d1,d2]of dirs){
-    let cnt=1;
-    for(let k=1;k<WIN;k++){
-      if(b[(r+d1*k)*SIZE+c+d2*k]===v)cnt++;else break;
-    }
-    for(let k=1;k<WIN;k++){
-      if(b[(r-d1*k)*SIZE+c-d2*k]===v)cnt++;else break;
-    }
-    if(cnt>=WIN)return true;
-  }
-  return false;
 }
 </script>
 
