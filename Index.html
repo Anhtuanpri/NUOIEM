@@ -59,6 +59,11 @@ button{
 button:hover{
   background:#06b6d4;
 }
+button:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+  background:#6b7280;
+}
 
 .btn-clear{
   background:#ef4444;
@@ -85,7 +90,7 @@ button:hover{
   min-width:100px;
 }
 
-/* ===== AVATAR + FRAME (100% CHUẨN) ===== */
+/* ===== AVATAR + FRAME (100% CHUẨN TRÒN) ===== */
 .avatar-wrap{
   position:relative;
   width:80px;
@@ -93,7 +98,7 @@ button:hover{
   margin-bottom:8px;
 }
 
-/* Avatar TRÒN - nằm dưới */
+/* Avatar TRÒN HOÀN HẢO */
 .avatar-mask{
   position:absolute;
   top:50%;
@@ -112,7 +117,6 @@ button:hover{
   height:100%;
   object-fit:cover;
   display:block;
-  border-radius:50%;
 }
 
 /* Khung động - ĐÈ LÊN TRÊN */
@@ -202,6 +206,12 @@ button:hover{
   object-fit:cover;
   border:3px solid #22d3ee;
 }
+
+.loading-text{
+  color:#22d3ee;
+  font-size:14px;
+  margin:10px 0;
+}
 </style>
 </head>
 
@@ -222,6 +232,8 @@ button:hover{
   </div>
   
   <input id="inpRoom" placeholder="Mã phòng"><br>
+  
+  <p class="loading-text hidden" id="uploadStatus">⏳ Đang upload...</p>
   
   <button id="btnJoin">🚀 Vào phòng</button><br>
   
@@ -280,6 +292,8 @@ const inpRoom=document.getElementById("inpRoom");
 const fileUpload=document.getElementById("fileUpload");
 const previewWrap=document.getElementById("previewWrap");
 const previewAvatar=document.getElementById("previewAvatar");
+const uploadStatus=document.getElementById("uploadStatus");
+const btnJoin=document.getElementById("btnJoin");
 
 /* ===== STATE ===== */
 let myRole="", roomId="";
@@ -287,6 +301,7 @@ let uid=localStorage.uid||(localStorage.uid=Math.random().toString(36));
 let timerInt=null;
 let selectedFile=null;
 let uploadedAvatarURL="";
+let isUploading=false;
 
 /* ===== LOAD SAVED DATA ===== */
 window.onload = function() {
@@ -306,6 +321,7 @@ fileUpload.onchange = function(e){
   selectedFile = e.target.files[0];
   if(!selectedFile) return;
   
+  // Preview local
   const reader = new FileReader();
   reader.onload = function(evt){
     previewAvatar.src = evt.target.result;
@@ -314,7 +330,7 @@ fileUpload.onchange = function(e){
   reader.readAsDataURL(selectedFile);
 };
 
-/* ===== CLEAR ALL STORAGE (LOCAL + FIREBASE) ===== */
+/* ===== CLEAR ALL STORAGE (LOCAL + FIREBASE STORAGE) ===== */
 document.getElementById("btnClearStorage").onclick = async function() {
   if(!confirm("⚠️ XÓA TẤT CẢ:\n- Tên & ảnh đã lưu (localStorage)\n- Ảnh trên Firebase Storage\n\nBạn chắc chứ?")) return;
   
@@ -331,7 +347,7 @@ document.getElementById("btnClearStorage").onclick = async function() {
         await ref.delete();
         console.log('✅ Đã xóa ảnh cũ trên Storage');
       } catch(err) {
-        console.log('⚠️ Không thể xóa ảnh cũ (có thể đã xóa rồi):', err);
+        console.log('⚠️ Không thể xóa ảnh cũ:', err);
       }
     }
     
@@ -339,6 +355,7 @@ document.getElementById("btnClearStorage").onclick = async function() {
     inpName.value = '';
     previewWrap.style.display = 'none';
     previewAvatar.src = '';
+    fileUpload.value = '';
     selectedFile = null;
     uploadedAvatarURL = "";
     
@@ -350,7 +367,9 @@ document.getElementById("btnClearStorage").onclick = async function() {
 };
 
 /* ===== JOIN ===== */
-document.getElementById("btnJoin").onclick = async function(){
+btnJoin.onclick = async function(){
+  if(isUploading) return;
+  
   const name=inpName.value.trim();
   roomId=inpRoom.value.trim();
   
@@ -358,6 +377,10 @@ document.getElementById("btnJoin").onclick = async function(){
 
   // Upload avatar nếu có file mới
   if(selectedFile){
+    isUploading = true;
+    btnJoin.disabled = true;
+    uploadStatus.classList.remove('hidden');
+    
     const fileName = `avatars/${uid}_${Date.now()}.jpg`;
     const storageRef = storage.ref(fileName);
     
@@ -370,7 +393,7 @@ document.getElementById("btnJoin").onclick = async function(){
           await oldRef.delete();
           console.log('✅ Đã xóa ảnh cũ');
         } catch(err) {
-          console.log('⚠️ Ảnh cũ không tồn tại hoặc đã xóa');
+          console.log('⚠️ Ảnh cũ không tồn tại');
         }
       }
       
@@ -379,19 +402,29 @@ document.getElementById("btnJoin").onclick = async function(){
       uploadedAvatarURL = await snapshot.ref.getDownloadURL();
       console.log('✅ Upload thành công:', uploadedAvatarURL);
       
+      // Lưu vào localStorage
+      localStorage.setItem('playerAvatar', uploadedAvatarURL);
+      
     } catch(err) {
       alert("❌ Lỗi upload: " + err.message);
+      isUploading = false;
+      btnJoin.disabled = false;
+      uploadStatus.classList.add('hidden');
       return;
     }
+    
+    isUploading = false;
+    btnJoin.disabled = false;
+    uploadStatus.classList.add('hidden');
   }
 
-  // Lưu vào localStorage
+  // Lưu tên vào localStorage
   localStorage.setItem('playerName', name);
-  if(uploadedAvatarURL) localStorage.setItem('playerAvatar', uploadedAvatarURL);
 
   home.classList.add("hidden");
   game.classList.remove("hidden");
 
+  // Join room
   db.ref("rooms/"+roomId).transaction(r=>{
     if(!r){
       r={
@@ -404,9 +437,21 @@ document.getElementById("btnJoin").onclick = async function(){
       };
     }
 
-    if(r.players.X && r.players.X.id===uid){ myRole="X"; return r; }
-    if(r.players.O && r.players.O.id===uid){ myRole="O"; return r; }
+    // Check if user already in room
+    if(r.players.X && r.players.X.id===uid){ 
+      myRole="X"; 
+      // Update avatar if changed
+      if(uploadedAvatarURL) r.players.X.avatar = uploadedAvatarURL;
+      return r; 
+    }
+    if(r.players.O && r.players.O.id===uid){ 
+      myRole="O"; 
+      // Update avatar if changed
+      if(uploadedAvatarURL) r.players.O.avatar = uploadedAvatarURL;
+      return r; 
+    }
 
+    // Join as new player
     if(!r.players.X){ 
       r.players.X={name, avatar:uploadedAvatarURL, id:uid}; 
       myRole="X"; 
