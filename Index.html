@@ -7,6 +7,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <style>
 :root{
@@ -46,7 +47,28 @@ input,button{
   border-radius:12px;
   border:none;
 }
-button{background:#22d3ee;font-weight:600}
+input{
+  width:80%;
+  max-width:400px;
+}
+button{
+  background:#22d3ee;
+  font-weight:600;
+  cursor:pointer;
+}
+button:hover{
+  background:#06b6d4;
+}
+
+.btn-clear{
+  background:#ef4444;
+  padding:8px 16px;
+  font-size:14px;
+  margin:10px 5px;
+}
+.btn-clear:hover{
+  background:#dc2626;
+}
 
 /* VERSUS */
 #versus{
@@ -63,38 +85,46 @@ button{background:#22d3ee;font-weight:600}
   min-width:100px;
 }
 
-/* ===== AVATAR + FRAME (FIX CHUẨN) ===== */
+/* ===== AVATAR + FRAME (100% CHUẨN) ===== */
 .avatar-wrap{
   position:relative;
-  width:64px;
-  height:64px;
+  width:80px;
+  height:80px;
+  margin-bottom:8px;
 }
 
-/* mask tròn để cắt avatar */
+/* Avatar TRÒN - nằm dưới */
 .avatar-mask{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%);
   width:64px;
   height:64px;
   border-radius:50%;
   overflow:hidden;
-  position:relative;
   z-index:1;
+  background:#1e293b;
 }
 
-/* avatar */
 .avatar{
   width:100%;
   height:100%;
   object-fit:cover;
+  display:block;
+  border-radius:50%;
 }
 
-/* khung đè ngoài */
+/* Khung động - ĐÈ LÊN TRÊN */
 .frame{
   position:absolute;
-  inset:-8px;
-  width:80px;
-  height:80px;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
   z-index:2;
   pointer-events:none;
+  object-fit:contain;
 }
 
 #sword{font-size:32px}
@@ -115,11 +145,16 @@ button{background:#22d3ee;font-weight:600}
   justify-content:center;
   font-size:clamp(14px,4vw,22px);
   cursor:pointer;
+  transition:all 0.2s;
 }
-.cell.X{color:var(--x)}
-.cell.O{color:var(--o)}
+.cell:hover{
+  background:#1e293b;
+  transform:scale(1.05);
+}
+.cell.X{color:var(--x);font-weight:bold}
+.cell.O{color:var(--o);font-weight:bold}
 
-#status{margin-top:10px;font-weight:600}
+#status{margin-top:10px;font-weight:600;font-size:18px}
 
 /* TIMER */
 #timers{
@@ -137,6 +172,36 @@ button{background:#22d3ee;font-weight:600}
 }
 #turnTimer{color:#facc15}
 #matchTimer{color:#60a5fa}
+
+/* FILE UPLOAD */
+#fileUpload{
+  display:none;
+}
+.upload-btn{
+  background:#8b5cf6;
+  cursor:pointer;
+  display:inline-block;
+  padding:10px 20px;
+  border-radius:12px;
+  margin:10px;
+  font-weight:600;
+}
+.upload-btn:hover{
+  background:#7c3aed;
+}
+
+/* PREVIEW */
+#previewWrap{
+  margin:15px auto;
+  display:none;
+}
+#previewAvatar{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid #22d3ee;
+}
 </style>
 </head>
 
@@ -146,9 +211,21 @@ button{background:#22d3ee;font-weight:600}
 
 <div id="home">
   <input id="inpName" placeholder="Tên kiện tướng"><br>
-  <input id="inpAvatar" placeholder="Link avatar (ảnh / gif)"><br>
+  
+  <!-- UPLOAD AVATAR -->
+  <label for="fileUpload" class="upload-btn">📸 Chọn Avatar</label>
+  <input type="file" id="fileUpload" accept="image/*"><br>
+  
+  <div id="previewWrap">
+    <img id="previewAvatar" src="">
+    <p style="font-size:12px;color:#22d3ee;">✅ Đã chọn ảnh</p>
+  </div>
+  
   <input id="inpRoom" placeholder="Mã phòng"><br>
-  <button id="btnJoin">Vào phòng</button>
+  
+  <button id="btnJoin">🚀 Vào phòng</button><br>
+  
+  <button class="btn-clear" id="btnClearStorage">🗑️ Xóa Tất Cả Dữ Liệu Cũ</button>
 </div>
 
 <div id="game" class="hidden">
@@ -165,6 +242,8 @@ button{background:#22d3ee;font-weight:600}
     <div class="timer" id="turnTimer">⏱ Lượt: —</div>
     <div class="timer" id="matchTimer">⌛ Ván: 15:00</div>
   </div>
+
+  <button class="btn-clear" style="margin-top:15px" id="btnLeave">🚪 Rời phòng</button>
 </div>
 
 <script>
@@ -173,16 +252,18 @@ const SIZE = 15;
 const TURN_LIMIT = 15000;
 const MATCH_LIMIT = 15 * 60 * 1000;
 
-/* 👉 DÁN LINK KHUNG TẠI ĐÂY */
+/* 👉 DÁN LINK KHUNG ĐỘNG TẠI ĐÂY */
 const FRAME_GIF = "https://i.imgur.com/8Km9tLL.gif";
 
 /* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey:"AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
   databaseURL:"https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"noitu-7dca6"
+  projectId:"noitu-7dca6",
+  storageBucket:"noitu-7dca6.firebasestorage.app"
 });
 const db = firebase.database();
+const storage = firebase.storage();
 
 /* ===== DOM ===== */
 const home=document.getElementById("home");
@@ -195,22 +276,118 @@ const pX=document.getElementById("playerX");
 const pO=document.getElementById("playerO");
 
 const inpName=document.getElementById("inpName");
-const inpAvatar=document.getElementById("inpAvatar");
 const inpRoom=document.getElementById("inpRoom");
+const fileUpload=document.getElementById("fileUpload");
+const previewWrap=document.getElementById("previewWrap");
+const previewAvatar=document.getElementById("previewAvatar");
 
 /* ===== STATE ===== */
 let myRole="", roomId="";
 let uid=localStorage.uid||(localStorage.uid=Math.random().toString(36));
 let timerInt=null;
+let selectedFile=null;
+let uploadedAvatarURL="";
+
+/* ===== LOAD SAVED DATA ===== */
+window.onload = function() {
+  const savedName = localStorage.getItem('playerName');
+  const savedAvatar = localStorage.getItem('playerAvatar');
+  
+  if(savedName) inpName.value = savedName;
+  if(savedAvatar) {
+    uploadedAvatarURL = savedAvatar;
+    previewAvatar.src = savedAvatar;
+    previewWrap.style.display = 'block';
+  }
+};
+
+/* ===== FILE UPLOAD ===== */
+fileUpload.onchange = function(e){
+  selectedFile = e.target.files[0];
+  if(!selectedFile) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    previewAvatar.src = evt.target.result;
+    previewWrap.style.display = 'block';
+  };
+  reader.readAsDataURL(selectedFile);
+};
+
+/* ===== CLEAR ALL STORAGE (LOCAL + FIREBASE) ===== */
+document.getElementById("btnClearStorage").onclick = async function() {
+  if(!confirm("⚠️ XÓA TẤT CẢ:\n- Tên & ảnh đã lưu (localStorage)\n- Ảnh trên Firebase Storage\n\nBạn chắc chứ?")) return;
+  
+  try {
+    // 1. Xóa localStorage
+    const oldAvatar = localStorage.getItem('playerAvatar');
+    localStorage.removeItem('playerName');
+    localStorage.removeItem('playerAvatar');
+    
+    // 2. Xóa ảnh trên Firebase Storage (nếu có)
+    if(oldAvatar && oldAvatar.includes('firebasestorage')){
+      try {
+        const ref = storage.refFromURL(oldAvatar);
+        await ref.delete();
+        console.log('✅ Đã xóa ảnh cũ trên Storage');
+      } catch(err) {
+        console.log('⚠️ Không thể xóa ảnh cũ (có thể đã xóa rồi):', err);
+      }
+    }
+    
+    // 3. Reset UI
+    inpName.value = '';
+    previewWrap.style.display = 'none';
+    previewAvatar.src = '';
+    selectedFile = null;
+    uploadedAvatarURL = "";
+    
+    alert("✅ Đã xóa toàn bộ dữ liệu cũ!");
+  } catch(err) {
+    alert("❌ Lỗi khi xóa: " + err.message);
+    console.error(err);
+  }
+};
 
 /* ===== JOIN ===== */
-document.getElementById("btnJoin").onclick=joinRoom;
-
-function joinRoom(){
+document.getElementById("btnJoin").onclick = async function(){
   const name=inpName.value.trim();
-  const avatar=inpAvatar.value.trim();
   roomId=inpRoom.value.trim();
-  if(!name||!roomId) return alert("Nhập đủ");
+  
+  if(!name||!roomId) return alert("⚠️ Nhập đủ tên và mã phòng!");
+
+  // Upload avatar nếu có file mới
+  if(selectedFile){
+    const fileName = `avatars/${uid}_${Date.now()}.jpg`;
+    const storageRef = storage.ref(fileName);
+    
+    try {
+      // Xóa ảnh cũ trước (nếu có)
+      const oldAvatar = localStorage.getItem('playerAvatar');
+      if(oldAvatar && oldAvatar.includes('firebasestorage')){
+        try {
+          const oldRef = storage.refFromURL(oldAvatar);
+          await oldRef.delete();
+          console.log('✅ Đã xóa ảnh cũ');
+        } catch(err) {
+          console.log('⚠️ Ảnh cũ không tồn tại hoặc đã xóa');
+        }
+      }
+      
+      // Upload ảnh mới
+      const snapshot = await storageRef.put(selectedFile);
+      uploadedAvatarURL = await snapshot.ref.getDownloadURL();
+      console.log('✅ Upload thành công:', uploadedAvatarURL);
+      
+    } catch(err) {
+      alert("❌ Lỗi upload: " + err.message);
+      return;
+    }
+  }
+
+  // Lưu vào localStorage
+  localStorage.setItem('playerName', name);
+  if(uploadedAvatarURL) localStorage.setItem('playerAvatar', uploadedAvatarURL);
 
   home.classList.add("hidden");
   game.classList.remove("hidden");
@@ -230,22 +407,52 @@ function joinRoom(){
     if(r.players.X && r.players.X.id===uid){ myRole="X"; return r; }
     if(r.players.O && r.players.O.id===uid){ myRole="O"; return r; }
 
-    if(!r.players.X){ r.players.X={name,avatar,id:uid}; myRole="X"; }
-    else if(!r.players.O){ r.players.O={name,avatar,id:uid}; myRole="O"; }
+    if(!r.players.X){ 
+      r.players.X={name, avatar:uploadedAvatarURL, id:uid}; 
+      myRole="X"; 
+    }
+    else if(!r.players.O){ 
+      r.players.O={name, avatar:uploadedAvatarURL, id:uid}; 
+      myRole="O"; 
+    }
 
     return r;
   });
 
   listen();
-}
+};
+
+/* ===== LEAVE ROOM ===== */
+document.getElementById("btnLeave").onclick = function() {
+  if(confirm("Rời phòng?")){
+    clearInterval(timerInt);
+    db.ref("rooms/"+roomId).off();
+    
+    if(myRole){
+      db.ref("rooms/"+roomId+"/players/"+myRole).remove();
+    }
+    
+    game.classList.add("hidden");
+    home.classList.remove("hidden");
+    myRole = "";
+    roomId = "";
+  }
+};
 
 /* ===== RENDER ===== */
 function renderPlayer(div,p,s){
-  if(!p){ div.innerHTML="<strong>???</strong>"; return; }
+  if(!p){ 
+    div.innerHTML="<strong>❓ Chờ người chơi...</strong>"; 
+    return; 
+  }
+  
+  // Avatar mặc định nếu không có
+  const avatarSrc = p.avatar || 'https://i.imgur.com/6VBx3io.png';
+  
   div.innerHTML=`
     <div class="avatar-wrap">
       <div class="avatar-mask">
-        <img class="avatar" src="${p.avatar}">
+        <img class="avatar" src="${avatarSrc}" onerror="this.src='https://i.imgur.com/6VBx3io.png'">
       </div>
       <img class="frame" src="${FRAME_GIF}">
     </div>
@@ -276,17 +483,24 @@ function startTimers(r){
   }
 
   timerInt=setInterval(()=>{
-    if(r.winner){ clearInterval(timerInt); return; }
+    if(r.winner){ 
+      clearInterval(timerInt); 
+      return; 
+    }
+    
     const now=Date.now();
 
     const left=TURN_LIMIT-(now-r.turnTime);
     if(r.turn===myRole){
-      turnTimerEl.textContent="⏱ Lượt: "+Math.max(0,Math.ceil(left/1000))+"s";
+      const sec = Math.max(0,Math.ceil(left/1000));
+      turnTimerEl.textContent="⏱ Lượt: "+sec+"s";
+      turnTimerEl.style.color = sec <= 5 ? '#ef4444' : '#facc15';
     }else{
-      turnTimerEl.textContent="⏱ Lượt: —";
+      turnTimerEl.textContent="⏱ Đợi đối thủ...";
+      turnTimerEl.style.color = '#facc15';
     }
 
-    if(left<=0){
+    if(left<=0 && !r.winner){
       db.ref("rooms/"+roomId+"/winner").set(r.turn==="X"?"O":"X");
       clearInterval(timerInt);
       return;
@@ -297,7 +511,7 @@ function startTimers(r){
     const s=Math.max(0,Math.floor((mleft%60000)/1000));
     matchTimerEl.textContent=`⌛ Ván: ${m}:${s.toString().padStart(2,"0")}`;
 
-    if(mleft<=0){
+    if(mleft<=0 && !r.winner){
       db.ref("rooms/"+roomId+"/winner").set("draw");
       clearInterval(timerInt);
     }
@@ -307,16 +521,26 @@ function startTimers(r){
 /* ===== LISTEN ===== */
 function listen(){
   db.ref("rooms/"+roomId).on("value",snap=>{
-    const r=snap.val(); if(!r) return;
+    const r=snap.val(); 
+    if(!r) return;
+    
     renderPlayer(pX,r.players.X,"X");
     renderPlayer(pO,r.players.O,"O");
     renderBoard(r.board);
     startTimers(r);
 
-    statusEl.textContent =
-      r.winner
-      ? (r.winner==="draw"?"🤝 Hoà":"🏆 "+r.winner+" thắng")
-      : (r.turn===myRole?"👉 Lượt của bạn":"⏳ Đợi đối thủ");
+    if(r.winner){
+      if(r.winner==="draw"){
+        statusEl.textContent = "🤝 HOÀ!";
+      }else{
+        const winnerName = r.players[r.winner]?.name || r.winner;
+        statusEl.textContent = `🏆 ${winnerName} THẮNG!`;
+      }
+    }else{
+      statusEl.textContent = r.turn===myRole 
+        ? "👉 LƯỢT CỦA BẠN!" 
+        : "⏳ Đợi đối thủ...";
+    }
   });
 }
 
@@ -325,13 +549,66 @@ function play(i){
   db.ref("rooms/"+roomId).once("value",snap=>{
     const r=snap.val();
     if(!r||r.turn!==myRole||r.board[i]||r.winner) return;
+    
     r.board[i]=myRole;
+    
+    if(checkWin(r.board, i)){
+      db.ref("rooms/"+roomId).update({
+        board:r.board,
+        winner:myRole
+      });
+      return;
+    }
+    
+    if(!r.board.includes("")){
+      db.ref("rooms/"+roomId).update({
+        board:r.board,
+        winner:"draw"
+      });
+      return;
+    }
+    
     db.ref("rooms/"+roomId).update({
       board:r.board,
       turn:myRole==="X"?"O":"X",
       turnTime:firebase.database.ServerValue.TIMESTAMP
     });
   });
+}
+
+/* ===== CHECK WIN ===== */
+function checkWin(board, pos){
+  const row = Math.floor(pos/SIZE);
+  const col = pos%SIZE;
+  const val = board[pos];
+  
+  const dirs = [
+    [0,1], [1,0], [1,1], [1,-1]
+  ];
+  
+  for(let [dr,dc] of dirs){
+    let count = 1;
+    
+    for(let i=1; i<5; i++){
+      const r = row + dr*i;
+      const c = col + dc*i;
+      if(r<0||r>=SIZE||c<0||c>=SIZE) break;
+      if(board[r*SIZE+c]!==val) break;
+      count++;
+    }
+    
+    for(let i=1; i<5; i++){
+      const r = row - dr*i;
+      const c = col - dc*i;
+      if(r<0||r>=SIZE||c<0||c>=SIZE) break;
+      if(board[r*SIZE+c]!==val) break;
+      count++;
+    }
+    
+    if(count>=5) return true;
+  }
+  
+  return false;
 }
 </script>
 
