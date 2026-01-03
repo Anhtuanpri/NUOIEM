@@ -17,41 +17,49 @@ body{
 }
 #board{
   display:grid;
-  grid-template-columns: repeat(3, 100px);
-  gap:10px;
+  gap:4px;
   justify-content:center;
   margin:20px auto;
 }
 .cell{
-  width:100px;
-  height:100px;
+  width:26px;
+  height:26px;
   background:#1e293b;
-  font-size:48px;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
+  font-size:18px;
+}
+.win{
+  background:#16a34a !important;
 }
 </style>
 </head>
 
 <body>
 
-<h2>⭕❌ Caro Online</h2>
+<h2>❌⭕ CỜ CARO ONLINE</h2>
 <p id="info"></p>
 <div id="board"></div>
+<p id="status"></p>
 
 <script>
-// ===== FIREBASE (CỦA BẠN) =====
+// ========= FIREBASE =========
 firebase.initializeApp({
   apiKey: "AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
   databaseURL: "https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "noitu-7dca6"
 });
 const db = firebase.database();
-// =============================
+// ============================
 
-// 👉 room lấy trực tiếp từ LINK
+// ====== CẤU HÌNH ======
+const SIZE = 15;        // bàn 15x15
+const WIN_COUNT = 5;    // 5 quân thắng
+// ======================
+
+// room từ link
 let room = location.hash.replace("#","");
 if(!room){
   room = Math.random().toString(36).slice(2,7);
@@ -61,41 +69,93 @@ if(!room){
 document.getElementById("info").innerText =
   "Link phòng: " + location.href;
 
+// xác định vai
 let myRole = "X";
-
-// xác định X hay O
 db.ref("rooms/"+room+"/players").once("value",snap=>{
   if(snap.exists()) myRole = "O";
   db.ref("rooms/"+room+"/players/"+myRole).set(true);
 });
 
+// tạo bàn
 const boardDiv = document.getElementById("board");
-const cells = Array(9).fill("");
+boardDiv.style.gridTemplateColumns = `repeat(${SIZE}, 26px)`;
+let cells = Array(SIZE*SIZE).fill("");
 
-for(let i=0;i<9;i++){
+for(let i=0;i<cells.length;i++){
   const d = document.createElement("div");
-  d.className="cell";
+  d.className = "cell";
   d.onclick = ()=> play(i);
   boardDiv.appendChild(d);
 }
 
+// đánh cờ
 function play(i){
   if(cells[i]) return;
-  cells[i] = myRole;
-  sync();
-}
 
-function sync(){
-  db.ref("rooms/"+room+"/board").set(cells);
-}
+  db.ref("rooms/"+room).once("value",snap=>{
+    const data = snap.val() || {};
+    if(data.winner) return;
 
-db.ref("rooms/"+room+"/board").on("value",snap=>{
-  if(!snap.val()) return;
-  snap.val().forEach((v,i)=>{
-    cells[i]=v;
-    boardDiv.children[i].innerText=v||"";
+    cells[i] = myRole;
+    db.ref("rooms/"+room).update({
+      board: cells,
+      last: myRole
+    });
   });
+}
+
+// lắng nghe
+db.ref("rooms/"+room).on("value",snap=>{
+  const data = snap.val();
+  if(!data) return;
+
+  if(data.board){
+    cells = data.board;
+    cells.forEach((v,i)=>{
+      boardDiv.children[i].innerText = v || "";
+    });
+  }
+
+  if(data.winner){
+    document.getElementById("status").innerText =
+      `🎉 ${data.winner} THẮNG!`;
+    highlight(data.winLine);
+  }else{
+    checkWin();
+  }
 });
+
+// kiểm tra thắng
+function checkWin(){
+  const dirs = [1, SIZE, SIZE+1, SIZE-1];
+
+  for(let i=0;i<cells.length;i++){
+    if(!cells[i]) continue;
+
+    for(let d of dirs){
+      let line=[i];
+      for(let k=1;k<WIN_COUNT;k++){
+        const idx = i + d*k;
+        if(cells[idx] === cells[i]) line.push(idx);
+        else break;
+      }
+      if(line.length === WIN_COUNT){
+        db.ref("rooms/"+room).update({
+          winner: cells[i],
+          winLine: line
+        });
+        return;
+      }
+    }
+  }
+}
+
+// tô sáng thắng
+function highlight(line){
+  line.forEach(i=>{
+    boardDiv.children[i].classList.add("win");
+  });
+}
 </script>
 
 </body>
