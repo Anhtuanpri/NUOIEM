@@ -22,8 +22,8 @@ body{
   margin:20px auto;
 }
 .cell{
-  width:26px;
-  height:26px;
+  width:28px;
+  height:28px;
   background:#1e293b;
   display:flex;
   align-items:center;
@@ -31,8 +31,12 @@ body{
   cursor:pointer;
   font-size:18px;
 }
-.win{background:#16a34a!important}
-input,button{padding:6px;margin:4px}
+.win{ background:#16a34a !important }
+input,button{
+  padding:6px;
+  margin:4px;
+}
+#panel{ margin-top:10px }
 </style>
 </head>
 
@@ -42,145 +46,163 @@ input,button{padding:6px;margin:4px}
 
 <div id="login">
   <input id="name" placeholder="Tên kiện tướng">
-  <button onclick="joinGame()">Vào phòng</button>
+  <input id="room" placeholder="Mã phòng (vd 1111)">
+  <button onclick="joinRoom()">Vào phòng</button>
 </div>
 
-<p id="info"></p>
+<div id="panel" style="display:none">
+  <p id="info"></p>
+  <p id="turn"></p>
+</div>
+
 <div id="board"></div>
 <p id="status"></p>
 
 <script>
-/* ===== FIREBASE ===== */
+/* ========= FIREBASE ========= */
 firebase.initializeApp({
   apiKey: "AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
   databaseURL: "https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "noitu-7dca6"
 });
 const db = firebase.database();
-/* =================== */
+/* =========================== */
 
+/* ===== CẤU HÌNH GAME ===== */
 const SIZE = 15;
 const WIN = 5;
-const GAME_TIME = 15 * 60 * 1000;
+const TURN_TIME = 15000; // 15 giây
+/* ======================== */
 
-// room từ link
-let room = location.hash.replace("#","");
-if(!room){
-  room = Math.random().toString(36).slice(2,7);
-  location.hash = room;
-}
-
-let uid = localStorage.uid || (localStorage.uid = Math.random().toString(36).slice(2));
-let myRole = null;
+let roomId = "";
+let myRole = "spectator";
 let myName = "";
 let cells = Array(SIZE*SIZE).fill("");
+let uid = localStorage.uid || (localStorage.uid = Math.random().toString(36).slice(2));
 
-// tạo bàn
+/* ===== TẠO BÀN ===== */
 const boardDiv = document.getElementById("board");
-boardDiv.style.gridTemplateColumns = `repeat(${SIZE},26px)`;
+boardDiv.style.gridTemplateColumns = `repeat(${SIZE},28px)`;
 for(let i=0;i<cells.length;i++){
-  const d=document.createElement("div");
-  d.className="cell";
-  d.onclick=()=>play(i);
+  const d = document.createElement("div");
+  d.className = "cell";
+  d.onclick = ()=> play(i);
   boardDiv.appendChild(d);
 }
 
-function joinGame(){
+/* ===== VÀO PHÒNG ===== */
+function joinRoom(){
   myName = document.getElementById("name").value.trim();
-  if(!myName) return alert("Nhập tên kiện tướng");
+  roomId = document.getElementById("room").value.trim();
+  if(!myName || !roomId) return alert("Nhập đủ tên & mã phòng");
 
   document.getElementById("login").style.display="none";
+  document.getElementById("panel").style.display="block";
 
-  db.ref("rooms/"+room).transaction(data=>{
-    if(!data){
-      data = {
+  db.ref("rooms/"+roomId).transaction(room=>{
+    if(!room){
+      room = {
         board: cells,
         turn: "X",
-        startTime: Date.now(),
+        turnStart: firebase.database.ServerValue.TIMESTAMP,
         players: {}
       };
     }
 
-    if(!data.players.X){
-      data.players.X={id:uid,name:myName};
-      myRole="X";
-    }else if(!data.players.O){
-      data.players.O={id:uid,name:myName};
-      myRole="O";
+    if(!room.players.X){
+      room.players.X = {id:uid,name:myName};
+      myRole = "X";
+    }else if(!room.players.O){
+      room.players.O = {id:uid,name:myName};
+      myRole = "O";
+    }else{
+      myRole = "spectator";
     }
-
-    return data;
+    return room;
   });
 
   listen();
 }
 
+/* ===== LẮNG NGHE ===== */
 function listen(){
-  db.ref("rooms/"+room).on("value",snap=>{
-    const d=snap.val();
+  db.ref("rooms/"+roomId).on("value",snap=>{
+    const d = snap.val();
     if(!d) return;
 
-    cells=d.board||cells;
-    cells.forEach((v,i)=>boardDiv.children[i].innerText=v||"");
+    // sync bàn
+    cells = d.board || cells;
+    cells.forEach((v,i)=> boardDiv.children[i].innerText = v || "");
 
+    // tên
     document.getElementById("info").innerText =
       `❌ ${d.players.X?.name||"..."}  vs  ⭕ ${d.players.O?.name||"..."}`;
 
-    if(Date.now()-d.startTime>GAME_TIME){
-      resetGame();
-    }
-
-    if(d.winner){
-      document.getElementById("status").innerText=`🎉 ${d.winner} thắng`;
+    // kiểm tra hết lượt
+    if(Date.now() - d.turnStart > TURN_TIME){
+      forceSwitchTurn(d.turn);
       return;
     }
 
-    document.getElementById("status").innerText =
-      myRole===d.turn ? "Lượt của bạn" : "Chờ đối thủ";
+    // trạng thái
+    if(d.winner){
+      document.getElementById("status").innerText =
+        `🎉 ${d.winner==="X"?d.players.X.name:d.players.O.name} THẮNG`;
+      return;
+    }
+
+    document.getElementById("turn").innerText =
+      d.turn===myRole ? "👉 LƯỢT CỦA BẠN (15s)" : "⏳ Đợi đối thủ";
   });
 }
 
+/* ===== ĐÁNH CỜ ===== */
 function play(i){
-  db.ref("rooms/"+room).once("value",snap=>{
-    const d=snap.val();
-    if(!d || d.turn!==myRole || cells[i]) return;
+  if(myRole==="spectator") return;
 
-    cells[i]=myRole;
-    const win = checkWin(i,myRole);
+  db.ref("rooms/"+roomId).once("value",snap=>{
+    const d = snap.val();
+    if(!d || d.turn!==myRole) return;
+    if(d.board[i]) return;
 
-    db.ref("rooms/"+room).update({
-      board: cells,
+    d.board[i]=myRole;
+
+    const win = checkWin(i,myRole,d.board);
+
+    db.ref("rooms/"+roomId).update({
+      board:d.board,
       turn: myRole==="X"?"O":"X",
+      turnStart: firebase.database.ServerValue.TIMESTAMP,
       winner: win?myRole:null
     });
   });
 }
 
-function checkWin(pos,val){
+/* ===== HẾT 15 GIÂY ===== */
+function forceSwitchTurn(current){
+  db.ref("rooms/"+roomId).update({
+    turn: current==="X"?"O":"X",
+    turnStart: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+/* ===== CHECK THẮNG ===== */
+function checkWin(pos,val,board){
   const r=Math.floor(pos/SIZE), c=pos%SIZE;
   const dirs=[[1,0],[0,1],[1,1],[1,-1]];
   for(let [dr,dc] of dirs){
     let cnt=1;
     for(let k=1;k<WIN;k++){
       const i=(r+dr*k)*SIZE+c+dc*k;
-      if(cells[i]===val) cnt++; else break;
+      if(board[i]===val) cnt++; else break;
     }
     for(let k=1;k<WIN;k++){
       const i=(r-dr*k)*SIZE+c-dc*k;
-      if(cells[i]===val) cnt++; else break;
+      if(board[i]===val) cnt++; else break;
     }
     if(cnt>=WIN) return true;
   }
   return false;
-}
-
-function resetGame(){
-  db.ref("rooms/"+room).update({
-    board:Array(SIZE*SIZE).fill(""),
-    turn:"X",
-    startTime:Date.now(),
-    winner:null
-  });
 }
 </script>
 
