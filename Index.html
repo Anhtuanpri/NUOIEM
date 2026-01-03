@@ -9,15 +9,72 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body{background:#0f172a;color:white;font-family:Arial;text-align:center}
-.hidden{display:none}
-input,select,button{padding:8px;margin:6px;border-radius:6px;border:none}
-#board{display:grid;gap:4px;justify-content:center;margin:20px auto}
-.cell{
-  width:28px;height:28px;background:#1e293b;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:18px
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.08);
+  --x:#34d399;
+  --o:#f472b6;
 }
+body{
+  margin:0;font-family:system-ui,Arial;color:#fff;text-align:center;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1f2a6a, transparent 40%),
+    radial-gradient(1200px 600px at 110% 10%, #0ea5e9, transparent 35%),
+    var(--bg);
+}
+.hidden{display:none}
+
+/* CARD */
+#home,#game{
+  max-width:560px;margin:20px auto;padding:20px;
+  background:var(--card);backdrop-filter:blur(14px);
+  border-radius:20px;position:relative;
+}
+
+/* INPUT */
+input,button{
+  padding:10px 12px;margin:6px;border-radius:12px;border:none
+}
+button{background:#22d3ee;font-weight:600}
+
+/* VERSUS */
+#versus{display:flex;justify-content:center;align-items:center;gap:20px;margin-bottom:10px}
+.vs-player{display:flex;flex-direction:column;align-items:center;min-width:100px}
+.avatar-wrap{position:relative;width:64px;height:64px;border-radius:50%;overflow:hidden}
+.avatar{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.frame{position:absolute;inset:-6px;width:76px;height:76px;pointer-events:none}
+#sword{font-size:32px}
+
+/* BOARD */
+#board{
+  display:grid;gap:6px;max-width:520px;margin:12px auto
+}
+.cell{
+  aspect-ratio:1/1;background:#020617;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(14px,4vw,22px);cursor:pointer
+}
+.cell.X{color:var(--x)} 
+.cell.O{color:var(--o)}
+
+#status{margin-top:10px;font-weight:600}
+
+/* TIMER BOTTOM */
+#timers{
+  margin-top:14px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+.timer{
+  flex:1;
+  padding:8px;
+  border-radius:10px;
+  background:rgba(0,0,0,.4);
+  font-weight:700;
+}
+#turnTimer{color:#facc15}
+#matchTimer{color:#60a5fa}
 </style>
 </head>
 
@@ -25,66 +82,77 @@ input,select,button{padding:8px;margin:6px;border-radius:6px;border:none}
 
 <h2>❌⭕ CỜ CARO ONLINE</h2>
 
-<!-- TRANG CHỦ -->
 <div id="home">
-  <input id="name" placeholder="Tên kiện tướng"><br>
-  <input id="room" placeholder="Mã phòng (vd 1111)"><br>
-  <select id="size">
-    <option value="3">3x3</option>
-    <option value="4">4x4</option>
-    <option value="5">5x5</option>
-    <option value="6">6x6</option>
-    <option value="15" selected>15x15</option>
-  </select><br>
-  <button onclick="joinRoom()">Vào phòng</button>
+  <input id="inpName" placeholder="Tên kiện tướng"><br>
+  <input id="inpAvatar" placeholder="Link avatar"><br>
+  <input id="inpRoom" placeholder="Mã phòng"><br>
+  <button id="btnJoin">Vào phòng</button>
 </div>
 
-<!-- GAME -->
 <div id="game" class="hidden">
-  <p id="info"></p>
-  <p id="turn"></p>
+  <div id="versus">
+    <div class="vs-player" id="playerX"></div>
+    <div id="sword">⚔️</div>
+    <div class="vs-player" id="playerO"></div>
+  </div>
+
   <div id="board"></div>
-  <p id="status"></p>
+  <div id="status"></div>
+
+  <!-- TIMER Ở DƯỚI -->
+  <div id="timers">
+    <div class="timer" id="turnTimer">⏱ Lượt: —</div>
+    <div class="timer" id="matchTimer">⌛ Ván: 15:00</div>
+  </div>
 </div>
 
 <script>
-/* ===== FIREBASE ===== */
+/* CONFIG */
+const SIZE = 15;
+const TURN_LIMIT = 15000;
+const MATCH_LIMIT = 15*60*1000;
+const FRAME_GIF = "https://i.imgur.com/8Km9tLL.gif";
+
+/* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
-  databaseURL: "https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "noitu-7dca6"
+  apiKey:"AIzaSyBdKC3vCBjHhsakrE1hUYg-2_Vi9JYX3vk",
+  databaseURL:"https://noitu-7dca6-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"noitu-7dca6"
 });
 const db = firebase.database();
-/* =================== */
 
-const TURN_TIME = 15000;
+/* DOM */
+const home=document.getElementById("home");
+const game=document.getElementById("game");
+const boardDiv=document.getElementById("board");
+const statusEl=document.getElementById("status");
+const turnTimerEl=document.getElementById("turnTimer");
+const matchTimerEl=document.getElementById("matchTimer");
+const pX=document.getElementById("playerX");
+const pO=document.getElementById("playerO");
 
-// DOM (BẮT BUỘC)
-const nameInput = document.getElementById("name");
-const roomInput = document.getElementById("room");
-const sizeSelect = document.getElementById("size");
-const boardDiv = document.getElementById("board");
-const home = document.getElementById("home");
-const game = document.getElementById("game");
+const inpName=document.getElementById("inpName");
+const inpAvatar=document.getElementById("inpAvatar");
+const inpRoom=document.getElementById("inpRoom");
 
-let SIZE = 15;
-let WIN = 5;
-let board = [];
-let roomId = "";
-let myName = "";
-let myRole = "spectator";
-let uid = localStorage.uid || (localStorage.uid = Math.random().toString(36).slice(2));
+/* STATE */
+let myRole="", roomId="";
+let uid=localStorage.uid||(localStorage.uid=Math.random().toString(36));
+let timerInt=null;
 
+const savedAvatar=localStorage.getItem("my_avatar");
+if(savedAvatar) inpAvatar.value=savedAvatar;
+
+document.getElementById("btnJoin").onclick=joinRoom;
+
+/* JOIN */
 function joinRoom(){
-  myName = nameInput.value.trim();
-  roomId = roomInput.value.trim();
-  SIZE = parseInt(sizeSelect.value);
-  WIN = SIZE >= 5 ? 5 : SIZE;
+  const name=inpName.value.trim();
+  const avatar=inpAvatar.value.trim();
+  roomId=inpRoom.value.trim();
+  if(!name||!roomId) return alert("Nhập đủ");
 
-  if(!myName || !roomId){
-    alert("Nhập tên và mã phòng");
-    return;
-  }
+  if(avatar) localStorage.setItem("my_avatar",avatar);
 
   home.classList.add("hidden");
   game.classList.remove("hidden");
@@ -92,28 +160,20 @@ function joinRoom(){
   db.ref("rooms/"+roomId).transaction(r=>{
     if(!r){
       r={
-        size: SIZE,
-        win: WIN,
-        board: Array(SIZE*SIZE).fill(""),
+        board:Array(SIZE*SIZE).fill(""),
         players:{},
         turn:"X",
-        turnStart: firebase.database.ServerValue.TIMESTAMP
+        startTime:firebase.database.ServerValue.TIMESTAMP,
+        turnTime:firebase.database.ServerValue.TIMESTAMP,
+        winner:null
       };
     }
 
-    SIZE = r.size;
-    WIN = r.win;
-    board = r.board;
+    if(r.players.X && r.players.X.id===uid){ myRole="X"; return r; }
+    if(r.players.O && r.players.O.id===uid){ myRole="O"; return r; }
 
-    if(!r.players.X){
-      r.players.X = {id:uid,name:myName};
-      myRole = "X";
-    }else if(!r.players.O){
-      r.players.O = {id:uid,name:myName};
-      myRole = "O";
-    }else{
-      myRole = "spectator";
-    }
+    if(!r.players.X){ r.players.X={name,avatar,id:uid}; myRole="X"; }
+    else if(!r.players.O){ r.players.O={name,avatar,id:uid}; myRole="O"; }
 
     return r;
   });
@@ -121,60 +181,96 @@ function joinRoom(){
   listen();
 }
 
-function renderBoard(){
-  boardDiv.innerHTML = "";
-  boardDiv.style.gridTemplateColumns = `repeat(${SIZE},28px)`;
+/* RENDER */
+function renderPlayer(div,p,s){
+  if(!p){ div.innerHTML="<strong>???</strong>"; return; }
+  div.innerHTML=`
+    <div class="avatar-wrap">
+      <img class="avatar" src="${p.avatar}">
+      <img class="frame" src="${FRAME_GIF}">
+    </div>
+    <strong style="color:${s==='X'?'var(--x)':'var(--o)'}">${p.name}</strong>`;
+}
 
+function renderBoard(board){
+  boardDiv.innerHTML="";
+  boardDiv.style.gridTemplateColumns=`repeat(${SIZE},1fr)`;
   board.forEach((v,i)=>{
     const d=document.createElement("div");
-    d.className="cell";
-    d.innerText=v||"";
+    d.className="cell "+(v||"");
+    d.textContent=v||"";
     d.onclick=()=>play(i);
     boardDiv.appendChild(d);
   });
 }
 
-function listen(){
-  db.ref("rooms/"+roomId).on("value",snap=>{
-    const r=snap.val();
-    if(!r) return;
+/* TIMER */
+function startTimers(r){
+  clearInterval(timerInt);
 
-    board = r.board;
-    renderBoard();
+  if(typeof r.startTime!=="number" || typeof r.turnTime!=="number"){
+    turnTimerEl.textContent="⏱ Lượt: —";
+    matchTimerEl.textContent="⌛ Ván: 15:00";
+    return;
+  }
 
-    document.getElementById("info").innerText =
-      `❌ ${r.players.X?.name||"..."}  vs  ⭕ ${r.players.O?.name||"..."}`;
+  timerInt=setInterval(()=>{
+    if(r.winner){ clearInterval(timerInt); return; }
+    const now=Date.now();
 
-    if(Date.now() - r.turnStart > TURN_TIME){
-      db.ref("rooms/"+roomId).update({
-        turn: r.turn==="X"?"O":"X",
-        turnStart: firebase.database.ServerValue.TIMESTAMP
-      });
+    // 15s lượt
+    const left=TURN_LIMIT-(now-r.turnTime);
+    if(r.turn===myRole){
+      turnTimerEl.textContent="⏱ Lượt: "+Math.max(0,Math.ceil(left/1000))+"s";
+    }else{
+      turnTimerEl.textContent="⏱ Lượt: —";
     }
-
-    if(r.winner){
-      document.getElementById("status").innerText = `🎉 ${r.winner} thắng`;
+    if(left<=0){
+      db.ref("rooms/"+roomId+"/winner").set(r.turn==="X"?"O":"X");
+      clearInterval(timerInt);
       return;
     }
 
-    document.getElementById("turn").innerText =
-      r.turn===myRole ? "👉 Lượt của bạn (15s)" : "⏳ Đợi đối thủ";
+    // 15p ván
+    const mleft=MATCH_LIMIT-(now-r.startTime);
+    const m=Math.max(0,Math.floor(mleft/60000));
+    const s=Math.max(0,Math.floor((mleft%60000)/1000));
+    matchTimerEl.textContent=`⌛ Ván: ${m}:${s.toString().padStart(2,"0")}`;
+    if(mleft<=0){
+      db.ref("rooms/"+roomId+"/winner").set("draw");
+      clearInterval(timerInt);
+    }
+  },500);
+}
+
+/* LISTEN */
+function listen(){
+  db.ref("rooms/"+roomId).on("value",snap=>{
+    const r=snap.val(); if(!r) return;
+
+    renderPlayer(pX,r.players.X,"X");
+    renderPlayer(pO,r.players.O,"O");
+    renderBoard(r.board);
+    startTimers(r);
+
+    if(r.winner){
+      statusEl.textContent=r.winner==="draw"?"🤝 Hoà":"🏆 "+r.winner+" thắng";
+    }else{
+      statusEl.textContent=r.turn===myRole?"👉 Lượt của bạn":"⏳ Đợi đối thủ";
+    }
   });
 }
 
+/* PLAY */
 function play(i){
-  if(myRole==="spectator") return;
-
   db.ref("rooms/"+roomId).once("value",snap=>{
     const r=snap.val();
-    if(!r || r.turn!==myRole || r.board[i]) return;
-
+    if(!r||r.turn!==myRole||r.board[i]||r.winner) return;
     r.board[i]=myRole;
-
     db.ref("rooms/"+roomId).update({
       board:r.board,
-      turn: myRole==="X"?"O":"X",
-      turnStart: firebase.database.ServerValue.TIMESTAMP
+      turn:myRole==="X"?"O":"X",
+      turnTime:firebase.database.ServerValue.TIMESTAMP
     });
   });
 }
